@@ -1,0 +1,13 @@
+cd d:\flutterProjects\physio_manager
+
+npx supabase login
+npx supabase link --project-ref jxksxewurykyjswbbcwa
+
+npx supabase secrets set SUPABASE_URL=https://jxksxewurykyjswbbcwa.supabase.co
+npx supabase secrets set SUPABASE_ANON_KEY=sb_publishable_rKQiaGRXChraEkAv_fCDdg_cJTsrYJh
+npx supabase secrets set SUPABASE_SERVICE_ROLE_KEY=ضع_هنا_المفتاح_الجديد_sb_secret
+
+npx supabase functions deploy admin-create-user
+npx supabase functions list
+
+مهم: لا تضع المفتاح السري الحقيقي داخل ملفات المشروع.
