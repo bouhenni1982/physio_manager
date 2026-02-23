@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'core/config/env.dart';
 import 'core/network/sync_coordinator.dart';
-import 'core/storage/sqlite_local_db.dart';
+import 'core/storage/local_db_instance.dart';
 import 'core/notifications/local_notification_service.dart';
 import 'core/notifications/notification_scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,7 +41,7 @@ Future<void> _bootstrap(ProviderContainer container) async {
       url: Env.supabaseUrl,
       anonKey: Env.supabaseAnonKey,
     );
-    final db = SqliteLocalDb();
+    final db = appLocalDb;
     NotificationScheduler.instance.init(db);
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool('sync_enabled') ?? true;

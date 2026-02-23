@@ -3,13 +3,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/network/sync_manager.dart';
 import '../../../core/storage/local_db.dart';
-import '../../../core/storage/sqlite_local_db.dart';
+import '../../../core/storage/local_db_instance.dart';
 import '../domain/patient.dart';
 import 'patient_repository.dart';
 
 class SupabasePatientRepository implements PatientRepository {
   final SupabaseClient _client = Supabase.instance.client;
-  final LocalDbService _db = SqliteLocalDb();
+  final LocalDbService _db = appLocalDb;
   late final SyncManager _sync = SyncManager(_db);
 
   @override

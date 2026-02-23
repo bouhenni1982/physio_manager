@@ -1,8 +1,8 @@
 import '../storage/local_db.dart';
-import '../storage/sqlite_local_db.dart';
+import '../storage/local_db_instance.dart';
 
 class NotificationLogService {
-  final LocalDbService _db = SqliteLocalDb();
+  final LocalDbService _db = appLocalDb;
 
   Future<void> log(String title, String body) async {
     await _db.init();
