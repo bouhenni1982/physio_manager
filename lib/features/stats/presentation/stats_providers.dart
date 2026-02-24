@@ -15,6 +15,18 @@ class StatsFilter {
     required this.year,
     required this.month,
   });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is StatsFilter &&
+        other.period == period &&
+        other.year == year &&
+        other.month == month;
+  }
+
+  @override
+  int get hashCode => Object.hash(period, year, month);
 }
 
 class TherapistStatsSummary {
