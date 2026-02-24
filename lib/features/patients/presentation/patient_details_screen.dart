@@ -7,7 +7,6 @@ import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/utils/phone_launcher.dart';
 import '../data/patient_details_service.dart';
 import '../../appointments/presentation/appointment_details_screen.dart';
-import '../../appointments/presentation/appointment_form_screen.dart';
 import 'patient_form_screen.dart';
 import 'patient_providers.dart';
 
@@ -60,21 +59,20 @@ class PatientDetailsScreen extends ConsumerWidget {
                         patient.fullName,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      const SizedBox(height: 8),
-                      Text(l10n.ageValue('${patient.age ?? '-'}')),
-                      Text(l10n.genderValue(_genderLabel(patient.gender, l10n))),
+                      const SizedBox(height: 6),
                       Text(
-                        l10n.statusLabelValue(
-                          _patientStatusLabel(patient.status, l10n),
+                        l10n.phoneValue(patient.phone ?? '-'),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: const Color(0xFF0B6E8A),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Text(l10n.diagnosisValue(patient.diagnosis ?? '-')),
-                      Text(l10n.medicalHistoryValue(patient.medicalHistory ?? '-')),
-                      Text(l10n.doctorValue(patient.doctorName ?? '-')),
-                      Text(l10n.phoneValue(patient.phone ?? '-')),
                       if ((patient.phone ?? '').trim().isNotEmpty) ...[
                         const SizedBox(height: 8),
                         FilledButton.tonalIcon(
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                          ),
                           onPressed: () async {
                             final ok = await launchPhone(patient.phone!);
                             if (!ok && context.mounted) {
@@ -87,6 +85,17 @@ class PatientDetailsScreen extends ConsumerWidget {
                           label: Text(l10n.callPatient),
                         ),
                       ],
+                      const SizedBox(height: 8),
+                      Text(l10n.ageValue('${patient.age ?? '-'}')),
+                      Text(l10n.genderValue(_genderLabel(patient.gender, l10n))),
+                      Text(
+                        l10n.statusLabelValue(
+                          _patientStatusLabel(patient.status, l10n),
+                        ),
+                      ),
+                      Text(l10n.diagnosisValue(patient.diagnosis ?? '-')),
+                      Text(l10n.medicalHistoryValue(patient.medicalHistory ?? '-')),
+                      Text(l10n.doctorValue(patient.doctorName ?? '-')),
                     ],
                   ),
                 ),
@@ -146,30 +155,11 @@ class PatientDetailsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: FilledButton.icon(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AppointmentFormScreen(
-                          initialPatientId: patient.id,
-                          initialTherapistId: patient.therapistId.isEmpty
-                              ? null
-                              : patient.therapistId,
-                        ),
-                      ),
-                    );
-                    ref.invalidate(patientDetailsProvider(patientId));
-                  },
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.newAppointmentForPatient),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                   onPressed: () async {
                     await Navigator.push(
                       context,

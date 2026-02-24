@@ -614,6 +614,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get therapistRequired => 'اختر المختص المعالج';
 
   @override
+  String get noTherapistOption => 'بدون مختص';
+
+  @override
   String get createInitialAppointment => 'إنشاء موعد أول للمريض';
 
   @override
@@ -779,6 +782,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appointmentsTitle => 'المواعيد';
+
+  @override
+  String get noPatientsForAppointments => 'أضف مريضًا أولاً قبل إنشاء موعد';
 
   @override
   String get pickDate => 'اختيار تاريخ';

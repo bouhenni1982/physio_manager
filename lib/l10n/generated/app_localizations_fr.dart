@@ -616,6 +616,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get therapistRequired => 'Choisir un kiné';
 
   @override
+  String get noTherapistOption => 'Sans kiné';
+
+  @override
   String get createInitialAppointment => 'Créer le premier rendez-vous';
 
   @override
@@ -780,6 +783,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appointmentsTitle => 'Rendez-vous';
+
+  @override
+  String get noPatientsForAppointments =>
+      'Ajoutez d\'abord un patient avant de créer un rendez-vous';
 
   @override
   String get pickDate => 'Choisir la date';

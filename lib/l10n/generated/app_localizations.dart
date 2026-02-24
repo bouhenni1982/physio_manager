@@ -1234,6 +1234,12 @@ abstract class AppLocalizations {
   /// **'اختر المختص المعالج'**
   String get therapistRequired;
 
+  /// No description provided for @noTherapistOption.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدون مختص'**
+  String get noTherapistOption;
+
   /// No description provided for @createInitialAppointment.
   ///
   /// In ar, this message translates to:
@@ -1526,6 +1532,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'المواعيد'**
   String get appointmentsTitle;
+
+  /// No description provided for @noPatientsForAppointments.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف مريضًا أولاً قبل إنشاء موعد'**
+  String get noPatientsForAppointments;
 
   /// No description provided for @pickDate.
   ///

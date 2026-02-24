@@ -196,6 +196,7 @@
   "sessionsMustBeNumber": "عدد الجلسات يجب أن يكون رقمًا",
   "sessionsInvalid": "عدد الجلسات غير صالح",
   "therapistLabel": "المختص المعالج",
+  "noTherapistOption": "بدون مختص",
   "therapistRequired": "اختر المختص المعالج",
   "createInitialAppointment": "إنشاء موعد أول للمريض",
   "createInitialAppointmentSubtitle": "توزيع الموعد مباشرة على المختص المحدد",
@@ -247,6 +248,7 @@
   "canceled": "ملغى",
 
   "appointmentsTitle": "المواعيد",
+  "noPatientsForAppointments": "أضف مريضًا أولاً قبل إنشاء موعد",
   "pickDate": "اختيار تاريخ",
   "unknownPatient": "مريض غير معروف",
   "therapistWithTime": "المختص: {name} • {time}",

@@ -299,11 +299,19 @@ class AppointmentsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(l10n.loadAppointmentsFailed)),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         tooltip: l10n.addAppointment,
-        onPressed: () =>
-            Navigator.pushNamed(context, AppointmentFormScreen.routeName),
-        child: const Icon(Icons.add),
+        onPressed: () {
+          if (patients.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.noPatientsForAppointments)),
+            );
+            return;
+          }
+          Navigator.pushNamed(context, AppointmentFormScreen.routeName);
+        },
+        icon: const Icon(Icons.add),
+        label: Text(l10n.addAppointment),
       ),
     );
   }

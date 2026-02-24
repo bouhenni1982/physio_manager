@@ -196,6 +196,7 @@
   "sessionsMustBeNumber": "Le nombre doit être un nombre",
   "sessionsInvalid": "Nombre de séances invalide",
   "therapistLabel": "Kiné",
+  "noTherapistOption": "Sans kiné",
   "therapistRequired": "Choisir un kiné",
   "createInitialAppointment": "Créer le premier rendez-vous",
   "createInitialAppointmentSubtitle": "Assigner au kiné sélectionné",
@@ -247,6 +248,7 @@
   "canceled": "Annulé",
 
   "appointmentsTitle": "Rendez-vous",
+  "noPatientsForAppointments": "Ajoutez d'abord un patient avant de créer un rendez-vous",
   "pickDate": "Choisir la date",
   "unknownPatient": "Patient inconnu",
   "therapistWithTime": "Kiné : {name} • {time}",

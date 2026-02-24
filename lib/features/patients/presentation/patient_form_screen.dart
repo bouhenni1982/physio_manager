@@ -43,9 +43,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
   String _status = 'active';
   bool _isSaving = false;
   bool _createInitialAppointment = true;
-  bool _createAllAppointments = false;
-  String _recurrenceType = 'weekly';
-  final Set<int> _selectedWeekdays = <int>{};
   DateTime _initialAppointmentAt = DateTime.now().add(const Duration(hours: 1));
   String? _prescriptionImagePath;
   final ImagePicker _picker = ImagePicker();
@@ -67,7 +64,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
       _status = p.status;
       _prescriptionImagePath = p.prescriptionImagePath;
     }
-    _selectedWeekdays.add(_initialAppointmentAt.weekday);
   }
 
   @override
@@ -112,7 +108,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
           .watch(therapistsProvider)
           .when(
             data: (therapists) {
-              if (therapists.isEmpty) {
+              if (therapists.isEmpty && !isAdmin) {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -131,7 +127,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                     }
                   }
                 }
-                _therapistId = myTherapistId ?? therapists.first.id;
+                _therapistId = myTherapistId ?? (isAdmin ? null : therapists.first.id);
               } else if (!isAdmin && currentUser != null) {
                 for (final t in therapists) {
                   if (t.userId == currentUser.id) {
@@ -253,21 +249,29 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: _therapistId,
-                      items: therapists
-                          .map(
-                            (t) => DropdownMenuItem<String>(
-                              value: t.id,
-                              child: Text(t.fullName),
-                            ),
-                          )
-                          .toList(),
+                      items: <DropdownMenuItem<String>>[
+                        if (isAdmin)
+                          DropdownMenuItem<String>(
+                            value: '',
+                            child: Text(l10n.noTherapistOption),
+                          ),
+                        ...therapists.map(
+                          (t) => DropdownMenuItem<String>(
+                            value: t.id,
+                            child: Text(t.fullName),
+                          ),
+                        ),
+                      ],
                       onChanged: (_isSaving || !isAdmin)
                           ? null
                           : (v) => setState(() => _therapistId = v),
                       decoration: InputDecoration(labelText: l10n.therapistLabel),
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? l10n.therapistRequired
-                          : null,
+                      validator: (v) {
+                        if (isAdmin) return null;
+                        return (v == null || v.isEmpty)
+                            ? l10n.therapistRequired
+                            : null;
+                      },
                     ),
                     if (!isEdit) ...[
                       const SizedBox(height: 12),
@@ -280,47 +284,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                         title: Text(l10n.createInitialAppointment),
                         subtitle: Text(l10n.createInitialAppointmentSubtitle),
                       ),
-                      SwitchListTile(
-                        value: _createAllAppointments,
-                        onChanged: _isSaving
-                            ? null
-                            : (v) => setState(() => _createAllAppointments = v),
-                        title: Text(l10n.createAllAppointments),
-                        subtitle: Text(l10n.createAllAppointmentsSubtitle),
-                      ),
-                      if (_createAllAppointments) ...[
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          initialValue: _recurrenceType,
-                          items: [
-                            DropdownMenuItem(
-                              value: 'weekly',
-                              child: Text(l10n.recurrenceWeekly),
-                            ),
-                            DropdownMenuItem(
-                              value: 'weekdays',
-                              child: Text(l10n.recurrenceWeekdays),
-                            ),
-                          ],
-                          onChanged: _isSaving
-                              ? null
-                              : (v) =>
-                                    setState(() => _recurrenceType = v ?? 'weekly'),
-                          decoration: InputDecoration(
-                            labelText: l10n.recurrenceLabel,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (_recurrenceType == 'weekdays')
-                          _WeekdayPicker(
-                            selected: _selectedWeekdays,
-                            onChanged: (v) => setState(() {
-                              _selectedWeekdays
-                                ..clear()
-                                ..addAll(v);
-                            }),
-                          ),
-                      ],
                       if (_createInitialAppointment)
                         ListTile(
                           contentPadding: EdgeInsets.zero,
@@ -375,6 +338,9 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                      ),
                       onPressed: _isSaving ? null : () => _save(isEdit),
                       child: _isSaving
                           ? const SizedBox(
@@ -399,7 +365,9 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _isSaving = true);
     try {
-      if (_therapistId == null || _therapistId!.isEmpty) {
+      if (!isEdit &&
+          ref.read(authStateProvider).valueOrNull?.role != UserRole.admin.value &&
+          (_therapistId == null || _therapistId!.isEmpty)) {
         throw Exception('therapist_required');
       }
 
@@ -420,7 +388,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
             ? null
             : _medicalHistory.text.trim(),
         suggestedSessions: int.tryParse(_suggestedSessions.text.trim()),
-        therapistId: _therapistId!,
+        therapistId: (_therapistId ?? '').trim(),
         doctorName: _doctorName.text.trim().isEmpty
             ? null
             : _doctorName.text.trim(),
@@ -445,26 +413,25 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         await repo.update(patient);
       } else {
         await repo.create(patient);
-        if (_createInitialAppointment) {
+        if (_createInitialAppointment && patient.therapistId.isNotEmpty) {
           final appointmentRepo = ref.read(appointmentRepositoryProvider);
-          final count = int.tryParse(_suggestedSessions.text.trim()) ?? 0;
-          final total = (_createAllAppointments && count > 0) ? count : 1;
-          final dates = _buildSchedule(_initialAppointmentAt, total);
-          for (final date in dates) {
-            final appointment = Appointment(
-              id: const Uuid().v4(),
-              patientId: patient.id,
-              therapistId: patient.therapistId,
-              scheduledAt: date,
-              status: 'scheduled',
-            );
-            await appointmentRepo.create(appointment);
-            ref.invalidate(
-              appointmentsForDayProvider(
-                DateTime(date.year, date.month, date.day),
+          final appointment = Appointment(
+            id: const Uuid().v4(),
+            patientId: patient.id,
+            therapistId: patient.therapistId,
+            scheduledAt: _initialAppointmentAt,
+            status: 'scheduled',
+          );
+          await appointmentRepo.create(appointment);
+          ref.invalidate(
+            appointmentsForDayProvider(
+              DateTime(
+                _initialAppointmentAt.year,
+                _initialAppointmentAt.month,
+                _initialAppointmentAt.day,
               ),
-            );
-          }
+            ),
+          );
         }
       }
 
@@ -495,35 +462,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         setState(() => _isSaving = false);
       }
     }
-  }
-
-  List<DateTime> _buildSchedule(DateTime start, int total) {
-    if (total <= 1) return [start];
-    if (_recurrenceType == 'weekly') {
-      return List<DateTime>.generate(
-        total,
-        (i) => start.add(Duration(days: 7 * i)),
-      );
-    }
-    final days = _selectedWeekdays.isEmpty
-        ? <int>{start.weekday}
-        : _selectedWeekdays.toSet();
-    final out = <DateTime>[start];
-    var cursor = start;
-    while (out.length < total) {
-      cursor = cursor.add(const Duration(days: 1));
-      if (!days.contains(cursor.weekday)) continue;
-      out.add(
-        DateTime(
-          cursor.year,
-          cursor.month,
-          cursor.day,
-          start.hour,
-          start.minute,
-        ),
-      );
-    }
-    return out;
   }
 }
 
@@ -635,50 +573,6 @@ class _PrescriptionImageField extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _WeekdayPicker extends StatelessWidget {
-  final Set<int> selected;
-  final ValueChanged<Set<int>> onChanged;
-
-  const _WeekdayPicker({
-    required this.selected,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final labels = <int, String>{
-      DateTime.monday: l10n.weekdayMon,
-      DateTime.tuesday: l10n.weekdayTue,
-      DateTime.wednesday: l10n.weekdayWed,
-      DateTime.thursday: l10n.weekdayThu,
-      DateTime.friday: l10n.weekdayFri,
-      DateTime.saturday: l10n.weekdaySat,
-      DateTime.sunday: l10n.weekdaySun,
-    };
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: labels.entries.map((entry) {
-        final isSelected = selected.contains(entry.key);
-        return FilterChip(
-          label: Text(entry.value),
-          selected: isSelected,
-          onSelected: (value) {
-            final next = selected.toSet();
-            if (value) {
-              next.add(entry.key);
-            } else if (next.length > 1) {
-              next.remove(entry.key);
-            }
-            onChanged(next);
-          },
-        );
-      }).toList(),
     );
   }
 }

@@ -196,6 +196,7 @@
   "sessionsMustBeNumber": "Sessions must be a number",
   "sessionsInvalid": "Invalid sessions count",
   "therapistLabel": "Therapist",
+  "noTherapistOption": "No therapist",
   "therapistRequired": "Select therapist",
   "createInitialAppointment": "Create first appointment",
   "createInitialAppointmentSubtitle": "Assign appointment to selected therapist",
@@ -247,6 +248,7 @@
   "canceled": "Canceled",
 
   "appointmentsTitle": "Appointments",
+  "noPatientsForAppointments": "Add a patient first before creating appointments",
   "pickDate": "Pick date",
   "unknownPatient": "Unknown patient",
   "therapistWithTime": "Therapist: {name} • {time}",

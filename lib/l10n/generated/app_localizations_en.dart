@@ -612,6 +612,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get therapistRequired => 'Select therapist';
 
   @override
+  String get noTherapistOption => 'No therapist';
+
+  @override
   String get createInitialAppointment => 'Create first appointment';
 
   @override
@@ -778,6 +781,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appointmentsTitle => 'Appointments';
+
+  @override
+  String get noPatientsForAppointments =>
+      'Add a patient first before creating appointments';
 
   @override
   String get pickDate => 'Pick date';
