@@ -154,6 +154,13 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       },
                     ),
                     const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _phone,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(labelText: l10n.phoneLabel),
+                    ),
+                    const SizedBox(height: 12),
                     _AutoTextField(
                       label: l10n.ageLabel,
                       controller: _age,
@@ -329,12 +336,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       controller: _doctorName,
                       type: 'doctor',
                       repo: ref.read(autocompleteRepositoryProvider),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _phone,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(labelText: l10n.phoneLabel),
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
