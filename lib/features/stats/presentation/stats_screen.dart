@@ -56,9 +56,19 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       ),
       body: stats.when(
         data: (s) {
+          final hasAnyData =
+              s.totalPatients > 0 || s.totalSessions > 0 || s.byTherapist.isNotEmpty;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (!hasAnyData)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(l10n.noResults),
+                  ),
+                ),
+              if (!hasAnyData) const SizedBox(height: 12),
               _buildFilters(context, l10n),
               const SizedBox(height: 12),
               _SectionTitle(text: l10n.sessionsStats),

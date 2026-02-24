@@ -86,6 +86,7 @@ class _TherapistCounters {
 class _StatsService {
   final LocalDbService _db;
   final SupabaseClient _client = Supabase.instance.client;
+  static const _remoteTimeout = Duration(seconds: 10);
 
   _StatsService(this._db);
 
@@ -96,7 +97,10 @@ class _StatsService {
     var therapistsRows = await _db.query('therapists');
 
     try {
-      final remotePatients = await _client.from('patients').select();
+      final remotePatients = await _client
+          .from('patients')
+          .select()
+          .timeout(_remoteTimeout);
       patientsRows = (remotePatients as List<dynamic>)
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
@@ -108,7 +112,10 @@ class _StatsService {
     }
 
     try {
-      final remoteAppointments = await _client.from('appointments').select();
+      final remoteAppointments = await _client
+          .from('appointments')
+          .select()
+          .timeout(_remoteTimeout);
       appointmentsRows = (remoteAppointments as List<dynamic>)
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
@@ -120,7 +127,10 @@ class _StatsService {
     }
 
     try {
-      final remoteTherapists = await _client.from('therapists').select();
+      final remoteTherapists = await _client
+          .from('therapists')
+          .select()
+          .timeout(_remoteTimeout);
       therapistsRows = (remoteTherapists as List<dynamic>)
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
