@@ -389,9 +389,16 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(l10n.loadPatientsFailed)),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.pushNamed(context, PatientFormScreen.routeName),
-        child: const Icon(Icons.person_add),
+      floatingActionButton: Semantics(
+        button: true,
+        label: l10n.patientFormTitleAdd,
+        child: FloatingActionButton.extended(
+          tooltip: l10n.patientFormTitleAdd,
+          onPressed: () =>
+              Navigator.pushNamed(context, PatientFormScreen.routeName),
+          icon: const Icon(Icons.person_add),
+          label: Text(l10n.patientFormTitleAdd),
+        ),
       ),
     );
   }

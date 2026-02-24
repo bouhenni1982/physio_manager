@@ -142,8 +142,19 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        isEdit
+                            ? l10n.patientFormTitleEdit
+                            : l10n.patientFormTitleAdd,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: _fullName,
+                      autofocus: !isEdit,
                       decoration: InputDecoration(labelText: l10n.fullNameLabel),
                       textInputAction: TextInputAction.next,
                       validator: (v) {
@@ -159,6 +170,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
                       decoration: InputDecoration(labelText: l10n.phoneLabel),
+                      autofillHints: const [AutofillHints.telephoneNumber],
                     ),
                     const SizedBox(height: 12),
                     _AutoTextField(
@@ -338,18 +350,23 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       repo: ref.read(autocompleteRepositoryProvider),
                     ),
                     const SizedBox(height: 24),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(52),
+                    Semantics(
+                      button: true,
+                      enabled: !_isSaving,
+                      label: l10n.save,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(56),
+                        ),
+                        onPressed: _isSaving ? null : () => _save(isEdit),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(l10n.save),
                       ),
-                      onPressed: _isSaving ? null : () => _save(isEdit),
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(l10n.save),
                     ),
                   ],
                 ),
