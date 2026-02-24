@@ -95,31 +95,40 @@ class _StatsService {
     var appointmentsRows = await _db.query('appointments');
     var therapistsRows = await _db.query('therapists');
 
-    if (patientsRows.isEmpty) {
-      try {
-        final remote = await _client.from('patients').select();
-        patientsRows = (remote as List<dynamic>)
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      } catch (_) {}
+    try {
+      final remotePatients = await _client.from('patients').select();
+      patientsRows = (remotePatients as List<dynamic>)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+      for (final row in patientsRows) {
+        await _db.insert('patients', _toLocalRow(row));
+      }
+    } catch (_) {
+      // Keep local fallback.
     }
 
-    if (appointmentsRows.isEmpty) {
-      try {
-        final remote = await _client.from('appointments').select();
-        appointmentsRows = (remote as List<dynamic>)
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      } catch (_) {}
+    try {
+      final remoteAppointments = await _client.from('appointments').select();
+      appointmentsRows = (remoteAppointments as List<dynamic>)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+      for (final row in appointmentsRows) {
+        await _db.insert('appointments', _toLocalRow(row));
+      }
+    } catch (_) {
+      // Keep local fallback.
     }
 
-    if (therapistsRows.isEmpty) {
-      try {
-        final remote = await _client.from('therapists').select();
-        therapistsRows = (remote as List<dynamic>)
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      } catch (_) {}
+    try {
+      final remoteTherapists = await _client.from('therapists').select();
+      therapistsRows = (remoteTherapists as List<dynamic>)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+      for (final row in therapistsRows) {
+        await _db.insert('therapists', _toLocalRow(row));
+      }
+    } catch (_) {
+      // Keep local fallback.
     }
 
     final therapistNames = <String, String>{};
@@ -241,5 +250,20 @@ class _StatsService {
     if (g == 'female' || g == 'f' || g.contains('أنث')) return 'female';
     if (g == 'child' || g.contains('طفل')) return 'child';
     return '';
+  }
+
+  Map<String, dynamic> _toLocalRow(Map<String, dynamic> row) {
+    final data = Map<String, dynamic>.from(row);
+    for (final entry in row.entries) {
+      final key = entry.key;
+      final value = entry.value;
+      if (key.endsWith('_at') && value is String) {
+        data[key] = DateTime.parse(value).millisecondsSinceEpoch;
+      }
+      if (key == 'is_primary' && value is bool) {
+        data[key] = value ? 1 : 0;
+      }
+    }
+    return data;
   }
 }

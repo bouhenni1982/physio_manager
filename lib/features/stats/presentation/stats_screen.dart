@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:physio_manager/l10n/generated/app_localizations.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/network/sync_coordinator.dart';
 import 'stats_providers.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
@@ -16,7 +18,8 @@ class StatsScreen extends ConsumerStatefulWidget {
 class _StatsScreenState extends ConsumerState<StatsScreen> {
   late int _year;
   late int _month;
-  StatsPeriod _period = StatsPeriod.month;
+  StatsPeriod _period = StatsPeriod.all;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -24,6 +27,18 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final now = DateTime.now();
     _year = now.year;
     _month = now.month;
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      _refreshStats();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshStats();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -34,6 +49,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
     return AppScaffold(
       title: l10n.statsTitle,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _refreshStats,
+        tooltip: l10n.syncNow,
+        child: const Icon(Icons.refresh),
+      ),
       body: stats.when(
         data: (s) {
           return ListView(
@@ -259,6 +279,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _refreshStats() async {
+    await SyncCoordinator.instance.syncNow();
+    final filter = StatsFilter(period: _period, year: _year, month: _month);
+    ref.invalidate(statsSummaryProvider(filter));
   }
 }
 
