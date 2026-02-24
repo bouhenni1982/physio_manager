@@ -12,6 +12,7 @@ import '../../patients/presentation/patient_details_screen.dart';
 import '../../patients/presentation/patient_providers.dart';
 import '../../stats/presentation/stats_screen.dart';
 import '../../therapists/presentation/therapists_screen.dart';
+import '../../therapists/presentation/therapist_providers.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../auth/presentation/auth_providers.dart';
 import 'dashboard_tabs_prefs.dart';
@@ -128,6 +129,7 @@ class _DayViewState extends ConsumerState<_DayView> {
     final l10n = AppLocalizations.of(context);
     final appointmentsData = ref.watch(appointmentsForDayProvider(_day));
     final patientsData = ref.watch(patientsProvider);
+    final therapistsData = ref.watch(therapistsProvider);
 
     return AppScaffold(
       title: l10n.todaySessions,
@@ -135,8 +137,10 @@ class _DayViewState extends ConsumerState<_DayView> {
         data: (appointments) {
           return patientsData.when(
             data: (patients) {
-              final patientNames = {
-                for (final p in patients) p.id: p.fullName,
+              final patientById = {for (final p in patients) p.id: p};
+              final therapistNames = {
+                for (final t in (therapistsData.valueOrNull ?? const []))
+                  t.id: t.fullName,
               };
               final sorted = [...appointments]
                 ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
@@ -208,15 +212,25 @@ class _DayViewState extends ConsumerState<_DayView> {
                             itemCount: sorted.length,
                             itemBuilder: (context, index) {
                               final a = sorted[index];
-                              final name = patientNames[a.patientId] ?? l10n.unknownPatient;
+                              final patient = patientById[a.patientId];
+                              final name = patient?.fullName ?? l10n.unknownPatient;
                               final time = MaterialLocalizations.of(context).formatTimeOfDay(
                                 TimeOfDay.fromDateTime(a.scheduledAt.toLocal()),
                                 alwaysUse24HourFormat: MediaQuery.of(context).alwaysUse24HourFormat,
                               );
+                              final therapistId = a.therapistId.isNotEmpty
+                                  ? a.therapistId
+                                  : (patient?.therapistId ?? '');
+                              final hasTherapist = therapistId.isNotEmpty;
+                              final therapistLabel = hasTherapist
+                                  ? (therapistNames[therapistId] ?? l10n.unassignedTherapist)
+                                  : l10n.unassignedTherapist;
                               return _SessionCard(
                                 name: name,
                                 time: time,
                                 status: a.status,
+                                therapistLabel: therapistLabel,
+                                hasTherapist: hasTherapist,
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -251,12 +265,16 @@ class _SessionCard extends StatelessWidget {
   final String name;
   final String time;
   final String status;
+  final String therapistLabel;
+  final bool hasTherapist;
   final VoidCallback onTap;
 
   const _SessionCard({
     required this.name,
     required this.time,
     required this.status,
+    required this.therapistLabel,
+    required this.hasTherapist,
     required this.onTap,
   });
 
@@ -298,6 +316,17 @@ class _SessionCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleSmall,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.patientTherapist(therapistLabel),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: hasTherapist
+                                  ? const Color(0xFF455A64)
+                                  : const Color(0xFFD84315),
+                              fontWeight:
+                                  hasTherapist ? FontWeight.w500 : FontWeight.w700,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Row(

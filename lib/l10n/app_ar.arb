@@ -158,6 +158,7 @@
   "noResults": "لا توجد نتائج مطابقة",
   "patientAgeDiagnosis": "العمر: {age} • التشخيص: {diagnosis}",
   "patientTherapist": "المختص: {name}",
+  "unassignedTherapist": "غير مبرمج/بدون مختص",
   "details": "تفاصيل",
   "loadPatientsFailed": "تعذر تحميل المرضى",
   "deletePatientTitle": "حذف المريض",

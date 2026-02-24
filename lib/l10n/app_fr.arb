@@ -158,6 +158,7 @@
   "noResults": "Aucun résultat",
   "patientAgeDiagnosis": "Âge : {age} • Diagnostic : {diagnosis}",
   "patientTherapist": "Kiné : {name}",
+  "unassignedTherapist": "Non planifié / sans kiné",
   "details": "Détails",
   "loadPatientsFailed": "Échec du chargement des patients",
   "deletePatientTitle": "Supprimer le patient",

@@ -158,6 +158,7 @@
   "noResults": "No results",
   "patientAgeDiagnosis": "Age: {age} • Diagnosis: {diagnosis}",
   "patientTherapist": "Therapist: {name}",
+  "unassignedTherapist": "Unscheduled / no therapist",
   "details": "Details",
   "loadPatientsFailed": "Failed to load patients",
   "deletePatientTitle": "Delete patient",

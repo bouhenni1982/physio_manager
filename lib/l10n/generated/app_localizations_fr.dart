@@ -502,6 +502,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get unassignedTherapist => 'Non planifié / sans kiné';
+
+  @override
   String get details => 'Détails';
 
   @override
@@ -613,10 +616,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get therapistLabel => 'Kiné';
 
   @override
-  String get therapistRequired => 'Choisir un kiné';
+  String get noTherapistOption => 'Sans kiné';
 
   @override
-  String get noTherapistOption => 'Sans kiné';
+  String get therapistRequired => 'Choisir un kiné';
 
   @override
   String get createInitialAppointment => 'Créer le premier rendez-vous';

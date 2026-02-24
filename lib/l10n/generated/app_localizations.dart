@@ -1006,6 +1006,12 @@ abstract class AppLocalizations {
   /// **'المختص: {name}'**
   String patientTherapist(Object name);
 
+  /// No description provided for @unassignedTherapist.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير مبرمج/بدون مختص'**
+  String get unassignedTherapist;
+
   /// No description provided for @details.
   ///
   /// In ar, this message translates to:
@@ -1228,17 +1234,17 @@ abstract class AppLocalizations {
   /// **'المختص المعالج'**
   String get therapistLabel;
 
-  /// No description provided for @therapistRequired.
-  ///
-  /// In ar, this message translates to:
-  /// **'اختر المختص المعالج'**
-  String get therapistRequired;
-
   /// No description provided for @noTherapistOption.
   ///
   /// In ar, this message translates to:
   /// **'بدون مختص'**
   String get noTherapistOption;
+
+  /// No description provided for @therapistRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر المختص المعالج'**
+  String get therapistRequired;
 
   /// No description provided for @createInitialAppointment.
   ///

@@ -499,6 +499,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get unassignedTherapist => 'غير مبرمج/بدون مختص';
+
+  @override
   String get details => 'تفاصيل';
 
   @override
@@ -611,10 +614,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get therapistLabel => 'المختص المعالج';
 
   @override
-  String get therapistRequired => 'اختر المختص المعالج';
+  String get noTherapistOption => 'بدون مختص';
 
   @override
-  String get noTherapistOption => 'بدون مختص';
+  String get therapistRequired => 'اختر المختص المعالج';
 
   @override
   String get createInitialAppointment => 'إنشاء موعد أول للمريض';

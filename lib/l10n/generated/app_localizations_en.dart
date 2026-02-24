@@ -498,6 +498,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get unassignedTherapist => 'Unscheduled / no therapist';
+
+  @override
   String get details => 'Details';
 
   @override
@@ -609,10 +612,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get therapistLabel => 'Therapist';
 
   @override
-  String get therapistRequired => 'Select therapist';
+  String get noTherapistOption => 'No therapist';
 
   @override
-  String get noTherapistOption => 'No therapist';
+  String get therapistRequired => 'Select therapist';
 
   @override
   String get createInitialAppointment => 'Create first appointment';
