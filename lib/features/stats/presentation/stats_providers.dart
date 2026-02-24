@@ -65,13 +65,28 @@ class StatsSummary {
     required this.completedPatients,
     required this.byTherapist,
   });
+
+  const StatsSummary.empty()
+      : totalSessions = 0,
+        sessionsMale = 0,
+        sessionsFemale = 0,
+        sessionsChild = 0,
+        totalPatients = 0,
+        patientsMale = 0,
+        patientsFemale = 0,
+        patientsChild = 0,
+        activePatients = 0,
+        completedPatients = 0,
+        byTherapist = const [];
 }
 
 final statsSummaryProvider =
     FutureProvider.family<StatsSummary, StatsFilter>((ref, filter) async {
       final db = ref.watch(localDbProvider);
       final service = _StatsService(db);
-      return service.load(filter);
+      return service
+          .load(filter)
+          .timeout(const Duration(seconds: 15), onTimeout: StatsSummary.empty);
     });
 
 class _TherapistCounters {
