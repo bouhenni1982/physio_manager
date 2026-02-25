@@ -242,7 +242,7 @@ class PatientDetailsService {
       doctorName: data['doctor_name'] as String?,
       phone: data['phone'] as String?,
       prescriptionImagePath: data['prescription_image_path'] as String?,
-      status: (data['status'] as String?) ?? 'active',
+      status: (data['status'] as String?) ?? 'not_started',
     );
   }
 

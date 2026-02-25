@@ -40,7 +40,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
 
   String? _therapistId;
   String _gender = 'male';
-  String _status = 'active';
   bool _isSaving = false;
   bool _createInitialAppointment = true;
   DateTime _initialAppointmentAt = DateTime.now().add(const Duration(hours: 1));
@@ -61,7 +60,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
       _phone.text = p.phone ?? '';
       _therapistId = p.therapistId;
       _gender = p.gender;
-      _status = p.status;
       _prescriptionImagePath = p.prescriptionImagePath;
     }
   }
@@ -200,34 +198,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                           ? null
                           : (v) => setState(() => _gender = v ?? 'male'),
                       decoration: InputDecoration(labelText: l10n.genderLabel),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: _status,
-                      items: [
-                        DropdownMenuItem(
-                          value: 'not_started',
-                          child: Text(l10n.statusNotStarted),
-                        ),
-                        DropdownMenuItem(
-                          value: 'active',
-                          child: Text(l10n.statusActive),
-                        ),
-                        DropdownMenuItem(
-                          value: 'completed',
-                          child: Text(l10n.statusCompleted),
-                        ),
-                        DropdownMenuItem(
-                          value: 'suspended',
-                          child: Text(l10n.statusSuspended),
-                        ),
-                      ],
-                      onChanged: _isSaving
-                          ? null
-                          : (v) => setState(() => _status = v ?? 'active'),
-                      decoration: InputDecoration(
-                        labelText: l10n.patientStatusLabel,
-                      ),
                     ),
                     const SizedBox(height: 12),
                     _AutoTextField(
@@ -402,7 +372,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         fullName: _fullName.text.trim(),
         age: int.tryParse(_age.text.trim()),
         gender: _gender,
-        status: _status,
+        status: isEdit ? (widget.patient?.status ?? 'not_started') : 'not_started',
         diagnosis: _diagnosis.text.trim().isEmpty
             ? null
             : _diagnosis.text.trim(),
