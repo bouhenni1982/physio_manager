@@ -175,6 +175,7 @@
   "ageInvalid": "العمر غير صالح",
   "genderLabel": "الجنس",
   "patientStatusLabel": "حالة المريض",
+  "statusNotStarted": "لم يبدأ العلاج",
   "statusActive": "نشط",
   "statusCompleted": "منتهي",
   "statusSuspended": "معلق",

@@ -1102,6 +1102,12 @@ abstract class AppLocalizations {
   /// **'حالة المريض'**
   String get patientStatusLabel;
 
+  /// No description provided for @statusNotStarted.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يبدأ العلاج'**
+  String get statusNotStarted;
+
   /// No description provided for @statusActive.
   ///
   /// In ar, this message translates to:

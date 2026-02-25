@@ -206,6 +206,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       initialValue: _status,
                       items: [
                         DropdownMenuItem(
+                          value: 'not_started',
+                          child: Text(l10n.statusNotStarted),
+                        ),
+                        DropdownMenuItem(
                           value: 'active',
                           child: Text(l10n.statusActive),
                         ),

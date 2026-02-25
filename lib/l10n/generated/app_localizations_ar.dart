@@ -548,6 +548,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get patientStatusLabel => 'حالة المريض';
 
   @override
+  String get statusNotStarted => 'لم يبدأ العلاج';
+
+  @override
   String get statusActive => 'نشط';
 
   @override

@@ -546,6 +546,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get patientStatusLabel => 'Patient status';
 
   @override
+  String get statusNotStarted => 'Not started';
+
+  @override
   String get statusActive => 'Active';
 
   @override

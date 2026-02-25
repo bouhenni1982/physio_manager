@@ -117,6 +117,10 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                                 child: Text(l10n.filterAll),
                               ),
                               DropdownMenuItem(
+                                value: 'not_started',
+                                child: Text(l10n.statusNotStarted),
+                              ),
+                              DropdownMenuItem(
                                 value: 'active',
                                 child: Text(l10n.currentlyTreating),
                               ),
@@ -209,18 +213,21 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                         .map((w) => w[0].toUpperCase())
                         .join();
                     final statusLabel = switch (item.status) {
+                      'not_started' => l10n.statusNotStarted,
                       'active' => l10n.statusActive,
                       'completed' => l10n.statusCompleted,
                       'suspended' => l10n.statusSuspended,
                       _ => item.status,
                     };
                     final statusColor = switch (item.status) {
+                      'not_started' => const Color(0xFF6D4C41),
                       'active' => const Color(0xFF2E7D32),
                       'completed' => const Color(0xFF0B6E8A),
                       'suspended' => const Color(0xFFC62828),
                       _ => Colors.grey,
                     };
                     final statusBg = switch (item.status) {
+                      'not_started' => const Color(0xFFEFEBE9),
                       'active' => const Color(0xFFE8F5E9),
                       'completed' => const Color(0xFFE0F2F8),
                       'suspended' => const Color(0xFFFFEBEE),

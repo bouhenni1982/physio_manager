@@ -437,6 +437,7 @@ String _genderLabel(String gender, AppLocalizations l10n) {
 
 String _patientStatusLabel(String status, AppLocalizations l10n) {
   return switch (status) {
+    'not_started' => l10n.statusNotStarted,
     'active' => l10n.statusActive,
     'completed' => l10n.statusCompleted,
     'suspended' => l10n.statusSuspended,

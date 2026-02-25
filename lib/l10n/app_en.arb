@@ -175,6 +175,7 @@
   "ageInvalid": "Invalid age",
   "genderLabel": "Gender",
   "patientStatusLabel": "Patient status",
+  "statusNotStarted": "Not started",
   "statusActive": "Active",
   "statusCompleted": "Completed",
   "statusSuspended": "Suspended",

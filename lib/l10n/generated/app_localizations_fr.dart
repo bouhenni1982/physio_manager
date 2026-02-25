@@ -550,6 +550,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get patientStatusLabel => 'Statut du patient';
 
   @override
+  String get statusNotStarted => 'Pas encore commencé';
+
+  @override
   String get statusActive => 'Actif';
 
   @override
