@@ -796,6 +796,54 @@ abstract class AppLocalizations {
   /// **'تعذر إنشاء الحساب: {error}'**
   String inviteFailed(Object error);
 
+  /// No description provided for @createRemainingSessionsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء باقي الجلسات تلقائيًا'**
+  String get createRemainingSessionsLabel;
+
+  /// No description provided for @remainingSessionsHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد الجلسات المتبقية: {count}'**
+  String remainingSessionsHint(Object count);
+
+  /// No description provided for @noRemainingSessionsHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد جلسات متبقية لهذا المريض'**
+  String get noRemainingSessionsHint;
+
+  /// No description provided for @repeatByWeekdays.
+  ///
+  /// In ar, this message translates to:
+  /// **'التكرار حسب الأيام'**
+  String get repeatByWeekdays;
+
+  /// No description provided for @repeatByDates.
+  ///
+  /// In ar, this message translates to:
+  /// **'التكرار بتواريخ محددة'**
+  String get repeatByDates;
+
+  /// No description provided for @customDatesLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'تواريخ مخصصة (YYYY-MM-DD)'**
+  String get customDatesLabel;
+
+  /// No description provided for @customDatesHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل التواريخ مفصولة بفواصل أو مسافات'**
+  String get customDatesHint;
+
+  /// No description provided for @invalidRepeatSelection.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى اختيار إعدادات تكرار صحيحة'**
+  String get invalidRepeatSelection;
+
   /// No description provided for @statsTitle.
   ///
   /// In ar, this message translates to:

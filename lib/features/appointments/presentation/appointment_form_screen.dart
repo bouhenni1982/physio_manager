@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'package:physio_manager/l10n/generated/app_localizations.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../patients/presentation/patient_providers.dart';
+import '../../patients/domain/patient.dart';
 import '../../therapists/presentation/therapist_providers.dart';
 import '../../../core/notifications/notification_providers.dart';
 import '../../../features/settings/presentation/notification_settings_provider.dart';
@@ -37,9 +38,13 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
   String? _therapistId;
   DateTime _scheduledAt = DateTime.now();
   String _status = 'scheduled';
+  bool _createSeries = false;
+  String _repeatMode = 'weekdays';
+  final Set<int> _repeatWeekdays = {};
 
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
+  final _customDatesController = TextEditingController();
 
   @override
   void initState() {
@@ -63,6 +68,7 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
   void dispose() {
     _dateController.dispose();
     _timeController.dispose();
+    _customDatesController.dispose();
     super.dispose();
   }
 
@@ -78,6 +84,19 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
           .watch(patientsProvider)
           .when(
             data: (patients) {
+              Patient? selectedPatient;
+              if (_patientId != null) {
+                for (final p in patients) {
+                  if (p.id == _patientId) {
+                    selectedPatient = p;
+                    break;
+                  }
+                }
+              }
+              final suggested = selectedPatient?.suggestedSessions;
+              final remainingSuggested = suggested == null
+                  ? 0
+                  : (suggested > 0 ? (suggested - 1) : 0);
               return ref
                   .watch(therapistsProvider)
                   .when(
@@ -198,6 +217,61 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                               labelText: l10n.statusLabel,
                             ),
                           ),
+                          if (!isEdit) ...[
+                            const SizedBox(height: 12),
+                            SwitchListTile(
+                              value: _createSeries,
+                              onChanged: remainingSuggested > 0
+                                  ? (v) => setState(() => _createSeries = v)
+                                  : null,
+                              title: Text(l10n.createRemainingSessionsLabel),
+                              subtitle: Text(
+                                remainingSuggested > 0
+                                    ? l10n
+                                        .remainingSessionsHint(remainingSuggested)
+                                    : l10n.noRemainingSessionsHint,
+                              ),
+                            ),
+                            if (_createSeries) ...[
+                              const SizedBox(height: 8),
+                              SegmentedButton<String>(
+                                segments: [
+                                  ButtonSegment(
+                                    value: 'weekdays',
+                                    label: Text(l10n.repeatByWeekdays),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'dates',
+                                    label: Text(l10n.repeatByDates),
+                                  ),
+                                ],
+                                selected: {_repeatMode},
+                                onSelectionChanged: (v) {
+                                  setState(() => _repeatMode = v.first);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              if (_repeatMode == 'weekdays')
+                                _WeekdayPicker(
+                                  selected: _repeatWeekdays,
+                                  onChanged: (set) =>
+                                      setState(() => _repeatWeekdays
+                                        ..clear()
+                                        ..addAll(set)),
+                                ),
+                              if (_repeatMode == 'dates') ...[
+                                TextFormField(
+                                  controller: _customDatesController,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.customDatesLabel,
+                                    helperText: l10n.customDatesHint,
+                                  ),
+                                  keyboardType: TextInputType.datetime,
+                                  maxLines: 3,
+                                ),
+                              ],
+                            ],
+                          ],
                           const SizedBox(height: 24),
                           FilledButton(
                             onPressed: () async {
@@ -268,6 +342,59 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                                       minutes,
                                     ),
                                   );
+                                }
+                              }
+
+                              if (!isEdit &&
+                                  _createSeries &&
+                                  remainingSuggested > 0) {
+                                final extraDates = _buildSeriesDates(
+                                  base: _scheduledAt,
+                                  count: remainingSuggested,
+                                  mode: _repeatMode,
+                                  weekdays: _repeatWeekdays,
+                                  customDates: _customDatesController.text,
+                                );
+                                if (extraDates == null) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(l10n.invalidRepeatSelection),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                for (final dt in extraDates) {
+                                  final extraId = const Uuid().v4();
+                                  final extra = Appointment(
+                                    id: extraId,
+                                    patientId: _patientId!,
+                                    therapistId: _therapistId!,
+                                    scheduledAt: dt,
+                                    status: 'scheduled',
+                                  );
+                                  await repo.create(extra);
+                                  final notifications = ref.read(
+                                    localNotificationsProvider,
+                                  );
+                                  await notifications.cancel(extraId);
+                                  final notifEnabled = ref.read(
+                                    notifEnabledProvider,
+                                  );
+                                  if (notifEnabled) {
+                                    final minutes = ref.read(
+                                      reminderMinutesProvider,
+                                    );
+                                    final remindAt = dt.subtract(
+                                      Duration(minutes: minutes),
+                                    );
+                                    await notifications.scheduleReminder(
+                                      extraId,
+                                      remindAt,
+                                      l10n.reminderTitle,
+                                      l10n.reminderBody(minutes),
+                                    );
+                                  }
                                 }
                               }
 
@@ -394,6 +521,101 @@ String _formatTime(DateTime dt) {
   final h = dt.hour.toString().padLeft(2, '0');
   final m = dt.minute.toString().padLeft(2, '0');
   return '$h:$m';
+}
+
+List<DateTime>? _buildSeriesDates({
+  required DateTime base,
+  required int count,
+  required String mode,
+  required Set<int> weekdays,
+  required String customDates,
+}) {
+  if (count <= 0) return <DateTime>[];
+  if (mode == 'weekdays') {
+    if (weekdays.isEmpty) return null;
+    final out = <DateTime>[];
+    var cursor = base;
+    while (out.length < count) {
+      cursor = cursor.add(const Duration(days: 1));
+      if (weekdays.contains(cursor.weekday)) {
+        out.add(DateTime(
+          cursor.year,
+          cursor.month,
+          cursor.day,
+          base.hour,
+          base.minute,
+        ));
+      }
+    }
+    return out;
+  }
+
+  // mode == 'dates'
+  final parsed = _parseCustomDates(customDates);
+  if (parsed.isEmpty) return null;
+  parsed.sort();
+  final out = <DateTime>[];
+  for (final d in parsed) {
+    if (d.isAfter(base)) {
+      out.add(DateTime(d.year, d.month, d.day, base.hour, base.minute));
+    }
+    if (out.length == count) break;
+  }
+  if (out.length < count) return null;
+  return out;
+}
+
+List<DateTime> _parseCustomDates(String input) {
+  final cleaned = input.replaceAll('\r', ' ').replaceAll('\n', ' ');
+  final parts = cleaned.split(RegExp(r'[,\s]+'));
+  final dates = <DateTime>[];
+  for (final p in parts) {
+    if (p.trim().isEmpty) continue;
+    final candidate = p.trim().replaceAll('/', '-');
+    final dt = DateTime.tryParse(candidate);
+    if (dt != null) {
+      dates.add(DateTime(dt.year, dt.month, dt.day));
+    }
+  }
+  return dates;
+}
+
+class _WeekdayPicker extends StatelessWidget {
+  final Set<int> selected;
+  final ValueChanged<Set<int>> onChanged;
+
+  const _WeekdayPicker({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = MaterialLocalizations.of(context).narrowWeekdays;
+    // MaterialLocalizations: Sunday..Saturday
+    const mapToDateTimeWeekday = [7, 1, 2, 3, 4, 5, 6];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: List.generate(7, (i) {
+        final weekday = mapToDateTimeWeekday[i];
+        final isSelected = selected.contains(weekday);
+        return FilterChip(
+          label: Text(labels[i]),
+          selected: isSelected,
+          onSelected: (v) {
+            final next = Set<int>.from(selected);
+            if (v) {
+              next.add(weekday);
+            } else {
+              next.remove(weekday);
+            }
+            onChanged(next);
+          },
+        );
+      }),
+    );
+  }
 }
 
 class _AutoTextField extends StatelessWidget {

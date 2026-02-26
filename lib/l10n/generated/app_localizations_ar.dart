@@ -386,6 +386,32 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get createRemainingSessionsLabel => 'إنشاء باقي الجلسات تلقائيًا';
+
+  @override
+  String remainingSessionsHint(Object count) {
+    return 'عدد الجلسات المتبقية: $count';
+  }
+
+  @override
+  String get noRemainingSessionsHint => 'لا توجد جلسات متبقية لهذا المريض';
+
+  @override
+  String get repeatByWeekdays => 'التكرار حسب الأيام';
+
+  @override
+  String get repeatByDates => 'التكرار بتواريخ محددة';
+
+  @override
+  String get customDatesLabel => 'تواريخ مخصصة (YYYY-MM-DD)';
+
+  @override
+  String get customDatesHint => 'أدخل التواريخ مفصولة بفواصل أو مسافات';
+
+  @override
+  String get invalidRepeatSelection => 'يرجى اختيار إعدادات تكرار صحيحة';
+
+  @override
   String get statsTitle => 'الإحصائيات';
 
   @override

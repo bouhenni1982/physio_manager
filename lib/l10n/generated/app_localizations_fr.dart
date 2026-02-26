@@ -389,6 +389,36 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get createRemainingSessionsLabel =>
+      'Créer automatiquement les séances restantes';
+
+  @override
+  String remainingSessionsHint(Object count) {
+    return 'Séances restantes à créer : $count';
+  }
+
+  @override
+  String get noRemainingSessionsHint =>
+      'Aucune séance restante pour ce patient';
+
+  @override
+  String get repeatByWeekdays => 'Répéter par jours';
+
+  @override
+  String get repeatByDates => 'Répéter par dates spécifiques';
+
+  @override
+  String get customDatesLabel => 'Dates personnalisées (YYYY-MM-DD)';
+
+  @override
+  String get customDatesHint =>
+      'Entrez des dates séparées par des virgules ou des espaces';
+
+  @override
+  String get invalidRepeatSelection =>
+      'Choisissez des paramètres de répétition valides';
+
+  @override
   String get statsTitle => 'Statistiques';
 
   @override
