@@ -327,6 +327,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loadTherapistsFailed => 'تعذر تحميل المختصين';
 
   @override
+  String get deleteTherapistTitle => 'حذف مختص';
+
+  @override
+  String get deleteTherapistConfirm => 'هل تريد حذف هذا المختص؟';
+
+  @override
+  String get deleteTherapistSuccess => 'تم حذف المختص';
+
+  @override
+  String deleteTherapistFailed(Object error) {
+    return 'تعذر حذف المختص: $error';
+  }
+
+  @override
+  String get cannotDeletePrimaryAdmin => 'لا يمكن حذف المسؤول الرئيسي';
+
+  @override
   String get inviteTherapistTitle => 'دعوة مختص جديد';
 
   @override

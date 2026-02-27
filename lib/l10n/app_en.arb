@@ -102,6 +102,11 @@
   "adminRemoved": "Removed admin from {name}",
   "updateAdminFailed": "Failed to update admin role: {error}",
   "loadTherapistsFailed": "Failed to load therapists",
+  "deleteTherapistTitle": "Delete therapist",
+  "deleteTherapistConfirm": "Do you want to delete this therapist?",
+  "deleteTherapistSuccess": "Therapist deleted",
+  "deleteTherapistFailed": "Failed to delete therapist: {error}",
+  "cannotDeletePrimaryAdmin": "Primary admin cannot be deleted",
 
   "inviteTherapistTitle": "Invite therapist",
   "fullNameLabel": "Full name",

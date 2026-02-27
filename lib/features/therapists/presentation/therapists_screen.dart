@@ -229,10 +229,70 @@ class TherapistsScreen extends ConsumerWidget {
                             icon: const Icon(Icons.delete_outline,
                                 color: Colors.redAccent, size: 20),
                             onPressed: () async {
-                              await ref
-                                  .read(therapistRepositoryProvider)
-                                  .delete(item.id);
-                              ref.invalidate(therapistsProvider);
+                              if (item.isPrimary) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.cannotDeletePrimaryAdmin),
+                                  ),
+                                );
+                                return;
+                              }
+                              if (adminCount <= 1 && item.isPrimary) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.minOneAdmin),
+                                  ),
+                                );
+                                return;
+                              }
+                              final ok = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(l10n.deleteTherapistTitle),
+                                  content:
+                                      Text(l10n.deleteTherapistConfirm),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: Text(l10n.delete),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (ok != true) return;
+                              try {
+                                await ref
+                                    .read(therapistRepositoryProvider)
+                                    .delete(
+                                      therapistId: item.id,
+                                      userId: item.userId,
+                                    );
+                                ref.invalidate(therapistsProvider);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content:
+                                          Text(l10n.deleteTherapistSuccess),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        l10n.deleteTherapistFailed(e.toString()),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
                             },
                           ),
                         ],

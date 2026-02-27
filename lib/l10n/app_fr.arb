@@ -102,6 +102,11 @@
   "adminRemoved": "Admin retiré à {name}",
   "updateAdminFailed": "Échec de mise à jour admin : {error}",
   "loadTherapistsFailed": "Échec du chargement",
+  "deleteTherapistTitle": "Supprimer le kiné",
+  "deleteTherapistConfirm": "Supprimer ce kiné ?",
+  "deleteTherapistSuccess": "Kiné supprimé",
+  "deleteTherapistFailed": "Échec suppression kiné : {error}",
+  "cannotDeletePrimaryAdmin": "Le admin principal ne peut pas être supprimé",
 
   "inviteTherapistTitle": "Inviter un kiné",
   "fullNameLabel": "Nom complet",

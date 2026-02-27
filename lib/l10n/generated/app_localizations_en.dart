@@ -326,6 +326,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadTherapistsFailed => 'Failed to load therapists';
 
   @override
+  String get deleteTherapistTitle => 'Delete therapist';
+
+  @override
+  String get deleteTherapistConfirm => 'Do you want to delete this therapist?';
+
+  @override
+  String get deleteTherapistSuccess => 'Therapist deleted';
+
+  @override
+  String deleteTherapistFailed(Object error) {
+    return 'Failed to delete therapist: $error';
+  }
+
+  @override
+  String get cannotDeletePrimaryAdmin => 'Primary admin cannot be deleted';
+
+  @override
   String get inviteTherapistTitle => 'Invite therapist';
 
   @override

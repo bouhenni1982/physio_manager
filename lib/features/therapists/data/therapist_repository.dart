@@ -6,5 +6,8 @@ abstract class TherapistRepository {
   Future<void> update(Therapist therapist);
   Future<void> setAdmin(String therapistId, bool isAdmin);
   Future<void> transferPrimary(String therapistId);
-  Future<void> delete(String id);
+  Future<void> delete({
+    required String therapistId,
+    required String userId,
+  });
 }

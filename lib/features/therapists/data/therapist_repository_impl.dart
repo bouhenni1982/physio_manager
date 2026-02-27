@@ -99,18 +99,26 @@ class SupabaseTherapistRepository implements TherapistRepository {
   }
 
   @override
-  Future<void> delete(String id) async {
+  Future<void> delete({
+    required String therapistId,
+    required String userId,
+  }) async {
     await _db.init();
-    await _db.delete('therapists', 'id = ?', [id]);
     try {
-      await _client.from('therapists').delete().eq('id', id);
-    } catch (_) {
-      await _sync.enqueue(
-        table: 'therapists',
-        operation: 'delete',
-        recordId: id,
+      final response = await _client.functions.invoke(
+        'admin-delete-user',
+        body: {
+          'user_id': userId,
+          'therapist_id': therapistId,
+        },
       );
+      if (response.status != 200) {
+        throw Exception(response.data?.toString() ?? 'delete_failed');
+      }
+    } catch (_) {
+      rethrow;
     }
+    await _db.delete('therapists', 'id = ?', [therapistId]);
   }
 
   Therapist _fromRow(dynamic row) {

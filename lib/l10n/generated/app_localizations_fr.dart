@@ -331,6 +331,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loadTherapistsFailed => 'Échec du chargement';
 
   @override
+  String get deleteTherapistTitle => 'Supprimer le kiné';
+
+  @override
+  String get deleteTherapistConfirm => 'Supprimer ce kiné ?';
+
+  @override
+  String get deleteTherapistSuccess => 'Kiné supprimé';
+
+  @override
+  String deleteTherapistFailed(Object error) {
+    return 'Échec suppression kiné : $error';
+  }
+
+  @override
+  String get cannotDeletePrimaryAdmin =>
+      'Le admin principal ne peut pas être supprimé';
+
+  @override
   String get inviteTherapistTitle => 'Inviter un kiné';
 
   @override

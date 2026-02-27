@@ -688,6 +688,36 @@ abstract class AppLocalizations {
   /// **'تعذر تحميل المختصين'**
   String get loadTherapistsFailed;
 
+  /// No description provided for @deleteTherapistTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف مختص'**
+  String get deleteTherapistTitle;
+
+  /// No description provided for @deleteTherapistConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد حذف هذا المختص؟'**
+  String get deleteTherapistConfirm;
+
+  /// No description provided for @deleteTherapistSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف المختص'**
+  String get deleteTherapistSuccess;
+
+  /// No description provided for @deleteTherapistFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر حذف المختص: {error}'**
+  String deleteTherapistFailed(Object error);
+
+  /// No description provided for @cannotDeletePrimaryAdmin.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن حذف المسؤول الرئيسي'**
+  String get cannotDeletePrimaryAdmin;
+
   /// No description provided for @inviteTherapistTitle.
   ///
   /// In ar, this message translates to:

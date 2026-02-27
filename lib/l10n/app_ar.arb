@@ -102,6 +102,11 @@
   "adminRemoved": "تمت إزالة صلاحية المسؤول من {name}",
   "updateAdminFailed": "تعذر تحديث صلاحية المسؤول: {error}",
   "loadTherapistsFailed": "تعذر تحميل المختصين",
+  "deleteTherapistTitle": "حذف مختص",
+  "deleteTherapistConfirm": "هل تريد حذف هذا المختص؟",
+  "deleteTherapistSuccess": "تم حذف المختص",
+  "deleteTherapistFailed": "تعذر حذف المختص: {error}",
+  "cannotDeletePrimaryAdmin": "لا يمكن حذف المسؤول الرئيسي",
 
   "inviteTherapistTitle": "دعوة مختص جديد",
   "fullNameLabel": "الاسم الكامل",

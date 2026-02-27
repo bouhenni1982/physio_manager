@@ -169,14 +169,15 @@ class _StatsService {
     }
 
     final therapistNames = <String, String>{};
+    final perTherapist = <String, _TherapistCounters>{};
     for (final t in therapistsRows) {
       final id = (t['id'] ?? '').toString();
       if (id.isEmpty) continue;
       therapistNames[id] = (t['full_name'] ?? '').toString();
+      perTherapist.putIfAbsent(id, _TherapistCounters.new);
     }
 
     final genderByPatientId = <String, String>{};
-    final perTherapist = <String, _TherapistCounters>{};
     var malePatients = 0;
     var femalePatients = 0;
     var childPatients = 0;
@@ -200,8 +201,8 @@ class _StatsService {
       if (status == 'active') activePatients++;
       if (status == 'completed') completedPatients++;
 
-      if (therapistId.isNotEmpty) {
-        final c = perTherapist.putIfAbsent(therapistId, _TherapistCounters.new);
+      if (therapistId.isNotEmpty && perTherapist.containsKey(therapistId)) {
+        final c = perTherapist[therapistId]!;
         c.totalPatients++;
         if (gender == 'male') c.patientsMale++;
         if (gender == 'female') c.patientsFemale++;
