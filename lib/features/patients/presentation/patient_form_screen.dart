@@ -14,6 +14,7 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../appointments/domain/appointment.dart';
 import '../../appointments/presentation/appointments_providers.dart';
 import '../../therapists/presentation/therapist_providers.dart';
+import '../../stats/presentation/stats_providers.dart';
 import '../domain/patient.dart';
 import 'patient_providers.dart';
 
@@ -428,6 +429,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
       }
 
       ref.invalidate(patientsProvider);
+      ref.invalidate(statsSummaryProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

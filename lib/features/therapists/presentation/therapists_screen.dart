@@ -284,11 +284,17 @@ class TherapistsScreen extends ConsumerWidget {
                                 }
                               } catch (e) {
                                 if (context.mounted) {
+                                  final raw = e.toString();
+                                  final msg = raw.contains(
+                                    'cannot_delete_primary_admin',
+                                  )
+                                      ? l10n.cannotDeletePrimaryAdmin
+                                      : l10n.deleteTherapistFailed(
+                                          e.toString(),
+                                        );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(
-                                        l10n.deleteTherapistFailed(e.toString()),
-                                      ),
+                                      content: Text(msg),
                                     ),
                                   );
                                 }

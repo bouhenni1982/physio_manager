@@ -43,12 +43,30 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Delete therapist row first if it exists.
-    if (therapistId) {
-      await adminClient.from('therapists').delete().eq('id', therapistId);
-    } else {
-      await adminClient.from('therapists').delete().eq('user_id', userId);
+    // Resolve target therapist row if present and block deleting primary admin.
+    const therapistQuery = therapistId
+      ? adminClient.from('therapists').select('id,is_primary').eq('id', therapistId)
+      : adminClient.from('therapists').select('id,is_primary').eq('user_id', userId);
+    const { data: therapistRows, error: therapistReadError } = await therapistQuery;
+    if (therapistReadError) {
+      return new Response(therapistReadError.message, { status: 400 });
     }
+    const target = (therapistRows ?? [])[0];
+    if (target?.is_primary === true) {
+      return new Response('cannot_delete_primary_admin', { status: 400 });
+    }
+
+    // Delete therapist row first (if any).
+    if (target?.id) {
+      const { error: therapistDeleteError } = await adminClient
+        .from('therapists')
+        .delete()
+        .eq('id', target.id);
+      if (therapistDeleteError) {
+        return new Response(therapistDeleteError.message, { status: 400 });
+      }
+    }
+
     // delete auth user
     const { error: delError } = await adminClient.auth.admin.deleteUser(userId);
     if (delError) {

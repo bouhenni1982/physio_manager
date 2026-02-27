@@ -131,9 +131,7 @@ class _StatsService {
       patientsRows = (remotePatients as List<dynamic>)
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
-      for (final row in patientsRows) {
-        await _db.insert('patients', _toLocalRow(row));
-      }
+      await _replaceLocalSnapshot('patients', patientsRows);
     } catch (_) {
       // Keep local fallback.
     }
@@ -146,9 +144,7 @@ class _StatsService {
       appointmentsRows = (remoteAppointments as List<dynamic>)
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
-      for (final row in appointmentsRows) {
-        await _db.insert('appointments', _toLocalRow(row));
-      }
+      await _replaceLocalSnapshot('appointments', appointmentsRows);
     } catch (_) {
       // Keep local fallback.
     }
@@ -161,9 +157,7 @@ class _StatsService {
       therapistsRows = (remoteTherapists as List<dynamic>)
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
-      for (final row in therapistsRows) {
-        await _db.insert('therapists', _toLocalRow(row));
-      }
+      await _replaceLocalSnapshot('therapists', therapistsRows);
     } catch (_) {
       // Keep local fallback.
     }
@@ -303,5 +297,16 @@ class _StatsService {
       }
     }
     return data;
+  }
+
+  Future<void> _replaceLocalSnapshot(
+    String table,
+    List<Map<String, dynamic>> rows,
+  ) async {
+    // Keep local DB strictly aligned with latest remote snapshot for stats tables.
+    await _db.delete(table, '1 = ?', [1]);
+    for (final row in rows) {
+      await _db.insert(table, _toLocalRow(row));
+    }
   }
 }

@@ -6,6 +6,7 @@ import '../../../core/widgets/empty_state_view.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../core/utils/phone_launcher.dart';
 import '../../therapists/presentation/therapist_providers.dart';
+import '../../stats/presentation/stats_providers.dart';
 import 'patient_details_screen.dart';
 import 'patient_providers.dart';
 import 'patient_form_screen.dart';
@@ -79,6 +80,7 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
             onRefresh: () async {
               ref.invalidate(patientsProvider);
               ref.invalidate(therapistsProvider);
+              ref.invalidate(statsSummaryProvider);
               await ref.read(patientsProvider.future);
             },
             child: ListView(
@@ -366,6 +368,7 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                                             ),
                                           );
                                           ref.invalidate(patientsProvider);
+                                          ref.invalidate(statsSummaryProvider);
                                         },
                                       ),
                                       IconButton(
@@ -433,6 +436,7 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
     if (ok != true) return;
     await ref.read(patientRepositoryProvider).delete(id);
     ref.invalidate(patientsProvider);
+    ref.invalidate(statsSummaryProvider);
   }
 }
 
