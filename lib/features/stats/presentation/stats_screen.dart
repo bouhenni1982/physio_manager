@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:physio_manager/l10n/generated/app_localizations.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/network/sync_coordinator.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../therapists/presentation/therapist_providers.dart';
 import 'stats_providers.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
@@ -46,6 +48,19 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final l10n = AppLocalizations.of(context);
     final filter = StatsFilter(period: _period, year: _year, month: _month);
     final stats = ref.watch(statsSummaryProvider(filter));
+    final auth = ref.watch(authStateProvider).valueOrNull;
+    final role = ref.watch(currentUserRoleProvider).valueOrNull;
+    final isAdmin = role == 'admin';
+    final therapists = ref.watch(therapistsProvider).valueOrNull ?? const [];
+    String? currentTherapistId;
+    if (auth != null) {
+      for (final t in therapists) {
+        if (t.userId == auth.id) {
+          currentTherapistId = t.id;
+          break;
+        }
+      }
+    }
 
     return AppScaffold(
       title: l10n.statsTitle,
@@ -55,7 +70,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         child: const Icon(Icons.refresh),
       ),
       body: stats.when(
-        data: (s) {
+        data: (s0) {
+          final s = _scopeSummary(
+            summary: s0,
+            isAdmin: isAdmin,
+            therapistId: currentTherapistId,
+          );
           final hasAnyData =
               s.totalPatients > 0 || s.totalSessions > 0 || s.byTherapist.isNotEmpty;
           return ListView(
@@ -315,6 +335,37 @@ class _MiniStat extends StatelessWidget {
       child: Text('$label: $value'),
     );
   }
+}
+
+StatsSummary _scopeSummary({
+  required StatsSummary summary,
+  required bool isAdmin,
+  required String? therapistId,
+}) {
+  if (isAdmin || therapistId == null) return summary;
+  TherapistStatsSummary? mine;
+  for (final t in summary.byTherapist) {
+    if (t.therapistId == therapistId) {
+      mine = t;
+      break;
+    }
+  }
+  if (mine == null) {
+    return const StatsSummary.empty();
+  }
+  return StatsSummary(
+    totalSessions: mine.totalSessions,
+    sessionsMale: mine.sessionsMale,
+    sessionsFemale: mine.sessionsFemale,
+    sessionsChild: mine.sessionsChild,
+    totalPatients: mine.totalPatients,
+    patientsMale: mine.patientsMale,
+    patientsFemale: mine.patientsFemale,
+    patientsChild: mine.patientsChild,
+    activePatients: mine.activePatients,
+    completedPatients: mine.completedPatients,
+    byTherapist: [mine],
+  );
 }
 
 class _SectionTitle extends StatelessWidget {

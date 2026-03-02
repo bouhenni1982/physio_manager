@@ -6,6 +6,8 @@ import '../../../core/widgets/app_scaffold.dart';
 import '../../patients/presentation/patient_providers.dart';
 import '../../patients/domain/patient.dart';
 import '../../therapists/presentation/therapist_providers.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../../core/constants/role.dart';
 import '../../../core/notifications/notification_providers.dart';
 import '../../../features/settings/presentation/notification_settings_provider.dart';
 import '../../../core/notifications/notification_log_service.dart';
@@ -75,6 +77,9 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final role = ref.watch(currentUserRoleProvider).valueOrNull;
+    final authUser = ref.watch(authStateProvider).valueOrNull;
+    final isAdmin = role == UserRole.admin.value;
     final isEdit = widget.appointment != null;
     return AppScaffold(
       title: isEdit
@@ -101,12 +106,37 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                   .watch(therapistsProvider)
                   .when(
                     data: (therapists) {
+                      String? myTherapistId;
+                      if (authUser != null) {
+                        for (final t in therapists) {
+                          if (t.userId == authUser.id) {
+                            myTherapistId = t.id;
+                            break;
+                          }
+                        }
+                      }
+                      final visibleTherapists = isAdmin
+                          ? therapists
+                          : therapists.where((t) => t.userId == authUser?.id).toList();
+                      if (!isAdmin && myTherapistId != null) {
+                        _therapistId = myTherapistId;
+                      }
+                      final visiblePatients = isAdmin || myTherapistId == null
+                          ? patients
+                          : patients
+                              .where((p) => p.therapistId == myTherapistId)
+                              .toList();
+                      if (!isAdmin &&
+                          _patientId != null &&
+                          !visiblePatients.any((p) => p.id == _patientId)) {
+                        _patientId = null;
+                      }
                       return ListView(
                         padding: const EdgeInsets.all(16),
                         children: [
                           DropdownButtonFormField<String>(
                             initialValue: _patientId,
-                            items: patients
+                            items: visiblePatients
                                 .map(
                                   (p) => DropdownMenuItem(
                                     value: p.id,
@@ -122,7 +152,7 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             initialValue: _therapistId,
-                            items: therapists
+                            items: visibleTherapists
                                 .map(
                                   (t) => DropdownMenuItem(
                                     value: t.id,
@@ -130,7 +160,9 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                                   ),
                                 )
                                 .toList(),
-                            onChanged: (v) => setState(() => _therapistId = v),
+                            onChanged: isAdmin
+                                ? (v) => setState(() => _therapistId = v)
+                                : null,
                             decoration: InputDecoration(
                               labelText: l10n.therapistLabelShort,
                             ),
@@ -276,6 +308,16 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                           FilledButton(
                             onPressed: () async {
                               if (_patientId == null || _therapistId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.pickPatientTherapist),
+                                  ),
+                                );
+                                return;
+                              }
+                              if (!isAdmin &&
+                                  myTherapistId != null &&
+                                  _therapistId != myTherapistId) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(l10n.pickPatientTherapist),

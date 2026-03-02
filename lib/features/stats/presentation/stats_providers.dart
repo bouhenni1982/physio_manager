@@ -32,6 +32,10 @@ class StatsFilter {
 class TherapistStatsSummary {
   final String therapistId;
   final String therapistName;
+  final int totalSessions;
+  final int sessionsMale;
+  final int sessionsFemale;
+  final int sessionsChild;
   final int totalPatients;
   final int patientsMale;
   final int patientsFemale;
@@ -42,6 +46,10 @@ class TherapistStatsSummary {
   const TherapistStatsSummary({
     required this.therapistId,
     required this.therapistName,
+    required this.totalSessions,
+    required this.sessionsMale,
+    required this.sessionsFemale,
+    required this.sessionsChild,
     required this.totalPatients,
     required this.patientsMale,
     required this.patientsFemale,
@@ -102,6 +110,10 @@ final statsSummaryProvider =
     });
 
 class _TherapistCounters {
+  int totalSessions = 0;
+  int sessionsMale = 0;
+  int sessionsFemale = 0;
+  int sessionsChild = 0;
   int totalPatients = 0;
   int patientsMale = 0;
   int patientsFemale = 0;
@@ -218,10 +230,19 @@ class _StatsService {
       totalSessions++;
 
       final patientId = (a['patient_id'] ?? '').toString();
+      final therapistId = (a['therapist_id'] ?? '').toString();
       final g = genderByPatientId[patientId];
       if (g == 'male') maleSessions++;
       if (g == 'female') femaleSessions++;
       if (g == 'child') childSessions++;
+
+      if (therapistId.isNotEmpty && perTherapist.containsKey(therapistId)) {
+        final c = perTherapist[therapistId]!;
+        c.totalSessions++;
+        if (g == 'male') c.sessionsMale++;
+        if (g == 'female') c.sessionsFemale++;
+        if (g == 'child') c.sessionsChild++;
+      }
     }
 
     final byTherapist = perTherapist.entries.map((entry) {
@@ -230,6 +251,10 @@ class _StatsService {
       return TherapistStatsSummary(
         therapistId: id,
         therapistName: therapistNames[id] ?? '-',
+        totalSessions: c.totalSessions,
+        sessionsMale: c.sessionsMale,
+        sessionsFemale: c.sessionsFemale,
+        sessionsChild: c.sessionsChild,
         totalPatients: c.totalPatients,
         patientsMale: c.patientsMale,
         patientsFemale: c.patientsFemale,

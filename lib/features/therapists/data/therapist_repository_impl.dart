@@ -13,12 +13,24 @@ class SupabaseTherapistRepository implements TherapistRepository {
   @override
   Future<List<Therapist>> getAll() async {
     await _db.init();
-    final local = await _db.query('therapists');
+    final isAdmin = await _isCurrentUserAdmin();
+    final uid = _client.auth.currentUser?.id;
+    final local = isAdmin
+        ? await _db.query('therapists')
+        : await _db.queryWhere(
+            'therapists',
+            where: 'user_id = ?',
+            whereArgs: [uid ?? ''],
+          );
     if (local.isNotEmpty) {
       return local.map(_fromRowLocal).toList();
     }
     try {
-      final rows = await _client.from('therapists').select();
+      var req = _client.from('therapists').select();
+      if (!isAdmin && uid != null) {
+        req = req.eq('user_id', uid);
+      }
+      final rows = await req;
       for (final r in (rows as List<dynamic>)) {
         final data = r as Map<String, dynamic>;
         await _db.insert('therapists', _toLocal(data));
@@ -180,5 +192,20 @@ class SupabaseTherapistRepository implements TherapistRepository {
       data['is_primary'] = (data['is_primary'] as bool) ? 1 : 0;
     }
     return data;
+  }
+
+  Future<bool> _isCurrentUserAdmin() async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return false;
+    try {
+      final row = await _client
+          .from('therapists')
+          .select('is_primary')
+          .eq('user_id', uid)
+          .maybeSingle();
+      return row?['is_primary'] == true;
+    } catch (_) {
+      return false;
+    }
   }
 }

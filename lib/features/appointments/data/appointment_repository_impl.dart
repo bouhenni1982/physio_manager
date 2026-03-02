@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/debug/network_error.dart';
 import '../../../core/network/sync_manager.dart';
 import '../../../core/storage/local_db.dart';
 import '../../../core/storage/local_db_instance.dart';
@@ -55,13 +56,28 @@ class SupabaseAppointmentRepository implements AppointmentRepository {
   @override
   Future<Appointment> create(Appointment appointment) async {
     await _db.init();
+    final isAdmin = await _isCurrentUserAdmin();
+    final currentTherapistId = await _currentTherapistId();
+    if (!isAdmin) {
+      if (currentTherapistId == null) {
+        throw Exception('therapist_profile_missing');
+      }
+      if (appointment.therapistId != currentTherapistId) {
+        throw Exception('forbidden_therapist_override');
+      }
+      await _ensurePatientBelongsToTherapist(
+        patientId: appointment.patientId,
+        therapistId: currentTherapistId,
+      );
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.insert('appointments', _toLocal(_toRow(appointment), nowMs: now));
     try {
       final row = _toRow(appointment, nowMs: now);
       final res = await _client.from('appointments').insert(row).select().single();
       return _fromRow(res);
-    } catch (_) {
+    } catch (e) {
+      if (!isNetworkError(e)) rethrow;
       await _sync.enqueue(
         table: 'appointments',
         operation: 'insert',
@@ -75,12 +91,27 @@ class SupabaseAppointmentRepository implements AppointmentRepository {
   @override
   Future<void> update(Appointment appointment) async {
     await _db.init();
+    final isAdmin = await _isCurrentUserAdmin();
+    final currentTherapistId = await _currentTherapistId();
+    if (!isAdmin) {
+      if (currentTherapistId == null) {
+        throw Exception('therapist_profile_missing');
+      }
+      if (appointment.therapistId != currentTherapistId) {
+        throw Exception('forbidden_therapist_override');
+      }
+      await _ensurePatientBelongsToTherapist(
+        patientId: appointment.patientId,
+        therapistId: currentTherapistId,
+      );
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.update('appointments', _toLocal(_toRow(appointment), nowMs: now), 'id = ?', [appointment.id]);
     try {
       final row = _toRow(appointment, nowMs: now);
       await _client.from('appointments').update(row).eq('id', appointment.id);
-    } catch (_) {
+    } catch (e) {
+      if (!isNetworkError(e)) rethrow;
       await _sync.enqueue(
         table: 'appointments',
         operation: 'update',
@@ -186,6 +217,23 @@ class SupabaseAppointmentRepository implements AppointmentRepository {
       return row?['id'] as String?;
     } catch (_) {
       return null;
+    }
+  }
+
+  Future<void> _ensurePatientBelongsToTherapist({
+    required String patientId,
+    required String therapistId,
+  }) async {
+    final row = await _client
+        .from('patients')
+        .select('therapist_id')
+        .eq('id', patientId)
+        .maybeSingle();
+    if (row == null) {
+      throw Exception('patient_not_found');
+    }
+    if ((row['therapist_id'] as String?) != therapistId) {
+      throw Exception('forbidden_patient_scope');
     }
   }
 }

@@ -17,32 +17,46 @@ class TherapistsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final data = ref.watch(therapistsProvider);
+    final auth = ref.watch(authStateProvider).valueOrNull;
+    final role = ref.watch(currentUserRoleProvider).valueOrNull;
+    final isAdmin = role == 'admin';
     return AppScaffold(
       title: l10n.therapistsTitle,
       body: data.when(
         data: (items) {
           final adminCount = items.where((e) => e.isPrimary).length;
+          final visibleItems = isAdmin
+              ? items
+              : items.where((e) => e.userId == auth?.id).toList();
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AdminInviteScreen(),
+              if (isAdmin)
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminInviteScreen(),
+                          ),
                         ),
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.addTherapist),
                       ),
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.addTherapist),
                     ),
+                  ],
+                ),
+              if (isAdmin) const SizedBox(height: 12),
+              if (visibleItems.isEmpty)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(l10n.noResults),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ...items.map((item) {
+                ),
+              ...visibleItems.map((item) {
                 final initials = item.fullName
                     .trim()
                     .split(' ')
@@ -140,167 +154,169 @@ class TherapistsScreen extends ConsumerWidget {
                                   },
                           ),
                           // Admin toggle icon
-                          IconButton(
-                            icon: Icon(
-                              item.isPrimary
-                                  ? Icons.admin_panel_settings
-                                  : Icons.verified_user_outlined,
-                              color: item.isPrimary
-                                  ? const Color(0xFF0B6E8A)
-                                  : Colors.grey,
-                            ),
-                            tooltip: item.isPrimary
-                                ? l10n.removeAdmin
-                                : l10n.makeAdmin,
-                            onPressed: () async {
-                              final makeAdmin = !item.isPrimary;
-                              if (makeAdmin && adminCount >= 2) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.maxAdmins)),
-                                );
-                                return;
-                              }
-                              if (!makeAdmin && adminCount <= 1) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.minOneAdmin)),
-                                );
-                                return;
-                              }
-                              final ok = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(
-                                    makeAdmin
-                                        ? l10n.makeAdmin
-                                        : l10n.removeAdmin,
-                                  ),
-                                  content: Text(
-                                    makeAdmin
-                                        ? l10n.confirmMakeAdmin(item.fullName)
-                                        : l10n.confirmRemoveAdmin(item.fullName),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: Text(l10n.cancel),
-                                    ),
-                                    FilledButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: Text(l10n.confirm),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (ok != true) return;
-                              try {
-                                await ref
-                                    .read(therapistRepositoryProvider)
-                                    .setAdmin(item.id, makeAdmin);
-                                ref.invalidate(therapistsProvider);
-                                ref.invalidate(currentUserRoleProvider);
-                                if (context.mounted) {
+                          if (isAdmin)
+                            IconButton(
+                              icon: Icon(
+                                item.isPrimary
+                                    ? Icons.admin_panel_settings
+                                    : Icons.verified_user_outlined,
+                                color: item.isPrimary
+                                    ? const Color(0xFF0B6E8A)
+                                    : Colors.grey,
+                              ),
+                              tooltip: item.isPrimary
+                                  ? l10n.removeAdmin
+                                  : l10n.makeAdmin,
+                              onPressed: () async {
+                                final makeAdmin = !item.isPrimary;
+                                if (makeAdmin && adminCount >= 2) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        makeAdmin
-                                            ? l10n.adminGranted(item.fullName)
-                                            : l10n.adminRemoved(item.fullName),
-                                      ),
-                                    ),
+                                    SnackBar(content: Text(l10n.maxAdmins)),
                                   );
+                                  return;
                                 }
-                              } catch (e) {
-                                if (context.mounted) {
+                                if (!makeAdmin && adminCount <= 1) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        l10n.updateAdminFailed(e.toString()),
-                                      ),
-                                    ),
+                                    SnackBar(content: Text(l10n.minOneAdmin)),
                                   );
+                                  return;
                                 }
-                              }
-                            },
-                          ),
-                          // Delete icon
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: Colors.redAccent, size: 20),
-                            onPressed: () async {
-                              if (item.isPrimary) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.cannotDeletePrimaryAdmin),
+                                final ok = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(
+                                      makeAdmin
+                                          ? l10n.makeAdmin
+                                          : l10n.removeAdmin,
+                                    ),
+                                    content: Text(
+                                      makeAdmin
+                                          ? l10n.confirmMakeAdmin(item.fullName)
+                                          : l10n.confirmRemoveAdmin(item.fullName),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: Text(l10n.cancel),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: Text(l10n.confirm),
+                                      ),
+                                    ],
                                   ),
                                 );
-                                return;
-                              }
-                              if (adminCount <= 1 && item.isPrimary) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.minOneAdmin),
-                                  ),
-                                );
-                                return;
-                              }
-                              final ok = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(l10n.deleteTherapistTitle),
-                                  content:
-                                      Text(l10n.deleteTherapistConfirm),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: Text(l10n.cancel),
-                                    ),
-                                    FilledButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: Text(l10n.delete),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (ok != true) return;
-                              try {
-                                await ref
-                                    .read(therapistRepositoryProvider)
-                                    .delete(
-                                      therapistId: item.id,
-                                      userId: item.userId,
+                                if (ok != true) return;
+                                try {
+                                  await ref
+                                      .read(therapistRepositoryProvider)
+                                      .setAdmin(item.id, makeAdmin);
+                                  ref.invalidate(therapistsProvider);
+                                  ref.invalidate(currentUserRoleProvider);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          makeAdmin
+                                              ? l10n.adminGranted(item.fullName)
+                                              : l10n.adminRemoved(item.fullName),
+                                        ),
+                                      ),
                                     );
-                                ref.invalidate(therapistsProvider);
-                                if (context.mounted) {
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          l10n.updateAdminFailed(e.toString()),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          // Delete icon
+                          if (isAdmin)
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.redAccent, size: 20),
+                              onPressed: () async {
+                                if (item.isPrimary) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content:
-                                          Text(l10n.deleteTherapistSuccess),
+                                      content: Text(l10n.cannotDeletePrimaryAdmin),
                                     ),
                                   );
+                                  return;
                                 }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  final raw = e.toString();
-                                  final msg = raw.contains(
-                                    'cannot_delete_primary_admin',
-                                  )
-                                      ? l10n.cannotDeletePrimaryAdmin
-                                      : l10n.deleteTherapistFailed(
-                                          e.toString(),
-                                        );
+                                if (adminCount <= 1 && item.isPrimary) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(msg),
+                                      content: Text(l10n.minOneAdmin),
                                     ),
                                   );
+                                  return;
                                 }
-                              }
-                            },
-                          ),
+                                final ok = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(l10n.deleteTherapistTitle),
+                                    content:
+                                        Text(l10n.deleteTherapistConfirm),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: Text(l10n.cancel),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: Text(l10n.delete),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (ok != true) return;
+                                try {
+                                  await ref
+                                      .read(therapistRepositoryProvider)
+                                      .delete(
+                                        therapistId: item.id,
+                                        userId: item.userId,
+                                      );
+                                  ref.invalidate(therapistsProvider);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text(l10n.deleteTherapistSuccess),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    final raw = e.toString();
+                                    final msg = raw.contains(
+                                      'cannot_delete_primary_admin',
+                                    )
+                                        ? l10n.cannotDeletePrimaryAdmin
+                                        : l10n.deleteTherapistFailed(
+                                            e.toString(),
+                                          );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(msg),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
                         ],
                       ),
                     ),
