@@ -2,6 +2,12 @@
 // Requires SUPABASE_SERVICE_ROLE_KEY secret.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
+};
+
 const supabaseUrl =
   Deno.env.get('SUPABASE_URL') ?? 'https://jxksxewurykyjswbbcwa.supabase.co';
 const anonKey =
@@ -10,13 +16,19 @@ const anonKey =
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
   try {
     if (!serviceRoleKey) {
-      return new Response('missing_service_role_key_secret', { status: 500 });
+      return new Response('missing_service_role_key_secret', {
+        status: 500,
+        headers: corsHeaders,
+      });
     }
     const authHeader = req.headers.get('Authorization') ?? '';
     if (!authHeader.startsWith('Bearer ')) {
-      return new Response('missing_auth', { status: 401 });
+      return new Response('missing_auth', { status: 401, headers: corsHeaders });
     }
 
     const callerClient = createClient(supabaseUrl, anonKey, {
@@ -24,7 +36,7 @@ Deno.serve(async (req) => {
     });
     const { data: userData, error: userError } = await callerClient.auth.getUser();
     if (userError || !userData.user) {
-      return new Response('unauthorized', { status: 401 });
+      return new Response('unauthorized', { status: 401, headers: corsHeaders });
     }
 
     const { data: roleRow, error: roleError } = await callerClient
@@ -33,13 +45,18 @@ Deno.serve(async (req) => {
       .eq('user_id', userData.user.id)
       .maybeSingle();
     if (roleError || roleRow?.is_primary !== true) {
-      return new Response('forbidden_only_admin', { status: 403 });
+      return new Response('forbidden_only_admin', {
+        status: 403,
+        headers: corsHeaders,
+      });
     }
 
     const body = await req.json();
     const userId = String(body.user_id ?? '').trim();
     const therapistId = String(body.therapist_id ?? '').trim();
-    if (!userId) return new Response('invalid_payload', { status: 400 });
+    if (!userId) {
+      return new Response('invalid_payload', { status: 400, headers: corsHeaders });
+    }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
@@ -49,11 +66,17 @@ Deno.serve(async (req) => {
       : adminClient.from('therapists').select('id,is_primary').eq('user_id', userId);
     const { data: therapistRows, error: therapistReadError } = await therapistQuery;
     if (therapistReadError) {
-      return new Response(therapistReadError.message, { status: 400 });
+      return new Response(therapistReadError.message, {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
     const target = (therapistRows ?? [])[0];
     if (target?.is_primary === true) {
-      return new Response('cannot_delete_primary_admin', { status: 400 });
+      return new Response('cannot_delete_primary_admin', {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
     // Delete therapist row first (if any).
@@ -63,18 +86,24 @@ Deno.serve(async (req) => {
         .delete()
         .eq('id', target.id);
       if (therapistDeleteError) {
-        return new Response(therapistDeleteError.message, { status: 400 });
+        return new Response(therapistDeleteError.message, {
+          status: 400,
+          headers: corsHeaders,
+        });
       }
     }
 
     // delete auth user
     const { error: delError } = await adminClient.auth.admin.deleteUser(userId);
     if (delError) {
-      return new Response(delError.message ?? 'delete_user_failed', { status: 400 });
+      return new Response(delError.message ?? 'delete_user_failed', {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
-    return Response.json({ ok: true, user_id: userId }, { status: 200 });
+    return Response.json({ ok: true, user_id: userId }, { status: 200, headers: corsHeaders });
   } catch (e) {
-    return new Response(String(e), { status: 500 });
+    return new Response(String(e), { status: 500, headers: corsHeaders });
   }
 });

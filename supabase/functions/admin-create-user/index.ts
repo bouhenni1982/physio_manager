@@ -4,6 +4,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
+};
+
 // Embedded defaults requested by user.
 const supabaseUrl =
   Deno.env.get('SUPABASE_URL') ?? 'https://jxksxewurykyjswbbcwa.supabase.co';
@@ -13,13 +19,22 @@ const anonKey =
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
   try {
     if (!serviceRoleKey) {
-      return new Response('missing_service_role_key_secret', { status: 500 });
+      return new Response('missing_service_role_key_secret', {
+        status: 500,
+        headers: corsHeaders,
+      });
     }
     const authHeader = req.headers.get('Authorization') ?? '';
     if (!authHeader.startsWith('Bearer ')) {
-      return new Response('missing_auth', { status: 401 });
+      return new Response('missing_auth', {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
     // Client scoped to caller (used to verify caller + role).
@@ -28,7 +43,7 @@ Deno.serve(async (req) => {
     });
     const { data: userData, error: userError } = await callerClient.auth.getUser();
     if (userError || !userData.user) {
-      return new Response('unauthorized', { status: 401 });
+      return new Response('unauthorized', { status: 401, headers: corsHeaders });
     }
 
     // Verify caller is admin from therapists table.
@@ -38,7 +53,10 @@ Deno.serve(async (req) => {
       .eq('user_id', userData.user.id)
       .maybeSingle();
     if (roleError || roleRow?.is_primary !== true) {
-      return new Response('forbidden_only_admin', { status: 403 });
+      return new Response('forbidden_only_admin', {
+        status: 403,
+        headers: corsHeaders,
+      });
     }
 
     const body = await req.json();
@@ -48,7 +66,7 @@ Deno.serve(async (req) => {
     const phone = body.phone ? String(body.phone).trim() : null;
 
     if (!fullName || !email || password.length < 8) {
-      return new Response('invalid_payload', { status: 400 });
+      return new Response('invalid_payload', { status: 400, headers: corsHeaders });
     }
 
     // Admin client (service-role) to create auth user + therapist row.
@@ -61,7 +79,10 @@ Deno.serve(async (req) => {
       user_metadata: { full_name: fullName },
     });
     if (createError || !created.user) {
-      return new Response(createError?.message ?? 'create_user_failed', { status: 400 });
+      return new Response(createError?.message ?? 'create_user_failed', {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
     const { error: insertError } = await adminClient.from('therapists').upsert({
@@ -75,11 +96,14 @@ Deno.serve(async (req) => {
     }, { onConflict: 'user_id' });
 
     if (insertError) {
-      return new Response(insertError.message, { status: 400 });
+      return new Response(insertError.message, { status: 400, headers: corsHeaders });
     }
 
-    return Response.json({ ok: true, user_id: created.user.id }, { status: 200 });
+    return Response.json(
+      { ok: true, user_id: created.user.id },
+      { status: 200, headers: corsHeaders },
+    );
   } catch (e) {
-    return new Response(String(e), { status: 500 });
+    return new Response(String(e), { status: 500, headers: corsHeaders });
   }
 });
