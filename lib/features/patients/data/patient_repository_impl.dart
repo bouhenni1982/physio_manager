@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/debug/network_error.dart';
 import '../../../core/network/sync_manager.dart';
 import '../../../core/storage/local_db.dart';
 import '../../../core/storage/local_db_instance.dart';
@@ -47,26 +48,21 @@ class SupabasePatientRepository implements PatientRepository {
   Future<Patient> create(Patient patient) async {
     await _db.init();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final localRow = _toLocal(_toRow(patient), nowMs: now);
-    localRow['prescription_image_path'] = patient.prescriptionImagePath;
-    await _db.insert('patients', localRow);
-    await _logAudit(
-      patientId: patient.id,
-      action: 'created',
-      details: {
-        'full_name': patient.fullName,
-        'gender': patient.gender,
-        'status': patient.status,
-        'phone': patient.phone,
-      },
-      nowMs: now,
-    );
     try {
       final row = _toRow(patient, nowMs: now);
       dynamic res;
       try {
         res = await _client.from('patients').insert(row).select().single();
       } on PostgrestException catch (e) {
+        if (e.code == '23514' &&
+            e.message.toLowerCase().contains('patients_status_check')) {
+          final fallback = Map<String, dynamic>.from(row)..['status'] = 'active';
+          res = await _client
+              .from('patients')
+              .insert(fallback)
+              .select()
+              .single();
+        } else
         // Backward compatibility if remote schema still misses patients.phone.
         if ((e.code == '42703' || e.message.contains('column')) &&
             row.containsKey('phone')) {
@@ -80,8 +76,40 @@ class SupabasePatientRepository implements PatientRepository {
           rethrow;
         }
       }
+      final localRow = _toLocal(_toRow(patient), nowMs: now);
+      if ((res as Map<String, dynamic>)['status'] is String) {
+        localRow['status'] = (res)['status'] as String;
+      }
+      localRow['prescription_image_path'] = patient.prescriptionImagePath;
+      await _db.insert('patients', localRow);
+      await _logAudit(
+        patientId: patient.id,
+        action: 'created',
+        details: {
+          'full_name': patient.fullName,
+          'gender': patient.gender,
+          'status': patient.status,
+          'phone': patient.phone,
+        },
+        nowMs: now,
+      );
       return _fromRow(res);
-    } catch (_) {
+    } catch (e) {
+      if (!isNetworkError(e)) rethrow;
+      final localRow = _toLocal(_toRow(patient), nowMs: now);
+      localRow['prescription_image_path'] = patient.prescriptionImagePath;
+      await _db.insert('patients', localRow);
+      await _logAudit(
+        patientId: patient.id,
+        action: 'created',
+        details: {
+          'full_name': patient.fullName,
+          'gender': patient.gender,
+          'status': patient.status,
+          'phone': patient.phone,
+        },
+        nowMs: now,
+      );
       await _sync.enqueue(
         table: 'patients',
         operation: 'insert',
@@ -96,25 +124,16 @@ class SupabasePatientRepository implements PatientRepository {
   Future<void> update(Patient patient) async {
     await _db.init();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final localRow = _toLocal(_toRow(patient), nowMs: now);
-    localRow['prescription_image_path'] = patient.prescriptionImagePath;
-    await _db.update('patients', localRow, 'id = ?', [patient.id]);
-    await _logAudit(
-      patientId: patient.id,
-      action: 'updated',
-      details: {
-        'full_name': patient.fullName,
-        'gender': patient.gender,
-        'status': patient.status,
-        'phone': patient.phone,
-      },
-      nowMs: now,
-    );
     try {
       final row = _toRow(patient, nowMs: now);
       try {
         await _client.from('patients').update(row).eq('id', patient.id);
       } on PostgrestException catch (e) {
+        if (e.code == '23514' &&
+            e.message.toLowerCase().contains('patients_status_check')) {
+          final fallback = Map<String, dynamic>.from(row)..['status'] = 'active';
+          await _client.from('patients').update(fallback).eq('id', patient.id);
+        } else
         if ((e.code == '42703' || e.message.contains('column')) &&
             row.containsKey('phone')) {
           final fallback = Map<String, dynamic>.from(row)..remove('phone');
@@ -123,7 +142,36 @@ class SupabasePatientRepository implements PatientRepository {
           rethrow;
         }
       }
-    } catch (_) {
+      final localRow = _toLocal(_toRow(patient), nowMs: now);
+      localRow['prescription_image_path'] = patient.prescriptionImagePath;
+      await _db.update('patients', localRow, 'id = ?', [patient.id]);
+      await _logAudit(
+        patientId: patient.id,
+        action: 'updated',
+        details: {
+          'full_name': patient.fullName,
+          'gender': patient.gender,
+          'status': patient.status,
+          'phone': patient.phone,
+        },
+        nowMs: now,
+      );
+    } catch (e) {
+      if (!isNetworkError(e)) rethrow;
+      final localRow = _toLocal(_toRow(patient), nowMs: now);
+      localRow['prescription_image_path'] = patient.prescriptionImagePath;
+      await _db.update('patients', localRow, 'id = ?', [patient.id]);
+      await _logAudit(
+        patientId: patient.id,
+        action: 'updated',
+        details: {
+          'full_name': patient.fullName,
+          'gender': patient.gender,
+          'status': patient.status,
+          'phone': patient.phone,
+        },
+        nowMs: now,
+      );
       await _sync.enqueue(
         table: 'patients',
         operation: 'update',
@@ -137,16 +185,38 @@ class SupabasePatientRepository implements PatientRepository {
   Future<void> delete(String id) async {
     await _db.init();
     final now = DateTime.now().millisecondsSinceEpoch;
-    await _logAudit(
-      patientId: id,
-      action: 'deleted',
-      details: const {},
-      nowMs: now,
-    );
-    await _db.delete('patients', 'id = ?', [id]);
     try {
+      final appointments = await _client
+          .from('appointments')
+          .select('id')
+          .eq('patient_id', id);
+      final appointmentIds = (appointments as List<dynamic>)
+          .map((e) => (e as Map<String, dynamic>)['id'] as String)
+          .toList();
+      if (appointmentIds.isNotEmpty) {
+        await _client
+            .from('sessions')
+            .delete()
+            .inFilter('appointment_id', appointmentIds);
+      }
+      await _client.from('appointments').delete().eq('patient_id', id);
       await _client.from('patients').delete().eq('id', id);
-    } catch (_) {
+      await _logAudit(
+        patientId: id,
+        action: 'deleted',
+        details: const {},
+        nowMs: now,
+      );
+      await _db.delete('patients', 'id = ?', [id]);
+    } catch (e) {
+      if (!isNetworkError(e)) rethrow;
+      await _logAudit(
+        patientId: id,
+        action: 'deleted',
+        details: const {},
+        nowMs: now,
+      );
+      await _db.delete('patients', 'id = ?', [id]);
       await _sync.enqueue(table: 'patients', operation: 'delete', recordId: id);
     }
   }
@@ -187,6 +257,7 @@ class SupabasePatientRepository implements PatientRepository {
   }
 
   Map<String, dynamic> _toRow(Patient patient, {int? nowMs}) {
+    final therapistId = patient.therapistId.trim();
     return {
       'id': patient.id,
       'full_name': patient.fullName,
@@ -195,7 +266,7 @@ class SupabasePatientRepository implements PatientRepository {
       'diagnosis': patient.diagnosis,
       'medical_history': patient.medicalHistory,
       'suggested_sessions': patient.suggestedSessions,
-      'therapist_id': patient.therapistId,
+      'therapist_id': therapistId.isEmpty ? null : therapistId,
       'doctor_name': patient.doctorName,
       'phone': patient.phone,
       'status': patient.status,
