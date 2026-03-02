@@ -13,6 +13,8 @@ import 'locale_provider.dart';
 import 'package:physio_manager/l10n/generated/app_localizations.dart';
 import '../../dashboard/presentation/dashboard_customize_screen.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../therapists/presentation/therapist_providers.dart';
+import '../../therapists/domain/therapist.dart';
 
 class SettingsScreen extends ConsumerWidget {
   static const String routeName = '/settings';
@@ -28,6 +30,17 @@ class SettingsScreen extends ConsumerWidget {
     final reminderMinutes = ref.watch(reminderMinutesProvider);
     final noteDelay = ref.watch(noteAutoSaveDelayProvider);
     final currentLocale = ref.watch(localeProvider);
+    final authUser = ref.watch(authStateProvider).valueOrNull;
+    final therapists = ref.watch(therapistsProvider).valueOrNull ?? const [];
+    Therapist? me;
+    if (authUser != null) {
+      for (final t in therapists) {
+        if (t.userId == authUser.id) {
+          me = t;
+          break;
+        }
+      }
+    }
 
     return AppScaffold(
       title: l10n.settingsTitle,
@@ -180,6 +193,36 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
+                  title: Text(l10n.phoneLabel),
+                  subtitle: Text(
+                    (me?.phone ?? '').trim().isEmpty ? '-' : me!.phone!,
+                  ),
+                  trailing: const Icon(Icons.phone),
+                  onTap: me == null
+                      ? null
+                      : () async {
+                          final updated = await _showPhoneEditDialog(
+                            context: context,
+                            initialPhone: me?.phone,
+                            l10n: l10n,
+                          );
+                          if (updated == null) return;
+                          await ref
+                              .read(therapistRepositoryProvider)
+                              .update(
+                                Therapist(
+                                  id: me!.id,
+                                  userId: me.userId,
+                                  fullName: me.fullName,
+                                  phone: updated.trim().isEmpty ? null : updated.trim(),
+                                  isPrimary: me.isPrimary,
+                                ),
+                              );
+                          ref.invalidate(therapistsProvider);
+                        },
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
                   title: Text(l10n.dashboardCustomizeTitle),
                   subtitle: Text(l10n.dashboardCustomizeSubtitle),
                   trailing: const Icon(Icons.dashboard_customize),
@@ -212,6 +255,37 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+Future<String?> _showPhoneEditDialog({
+  required BuildContext context,
+  required String? initialPhone,
+  required AppLocalizations l10n,
+}) async {
+  final controller = TextEditingController(text: initialPhone ?? '');
+  final result = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.phoneLabel),
+      content: TextField(
+        controller: controller,
+        keyboardType: TextInputType.phone,
+        decoration: InputDecoration(labelText: l10n.phoneLabel),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, controller.text),
+          child: Text(l10n.save),
+        ),
+      ],
+    ),
+  );
+  controller.dispose();
+  return result;
 }
 
 class _LocalePicker extends StatelessWidget {

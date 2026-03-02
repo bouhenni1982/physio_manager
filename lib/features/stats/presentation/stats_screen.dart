@@ -162,64 +162,66 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 female: s.patientsFemale,
                 child: s.patientsChild,
               ),
-              const SizedBox(height: 20),
-              _SectionTitle(text: l10n.statsByTherapist),
-              const SizedBox(height: 8),
-              if (s.byTherapist.isEmpty)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(l10n.noResults),
+              if (isAdmin) ...[
+                const SizedBox(height: 20),
+                _SectionTitle(text: l10n.statsByTherapist),
+                const SizedBox(height: 8),
+                if (s.byTherapist.isEmpty)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(l10n.noResults),
+                    ),
                   ),
-                ),
-              ...s.byTherapist.map(
-                (t) => Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.therapistName,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _MiniStat(
-                              label: l10n.totalPatients,
-                              value: t.totalPatients.toString(),
-                            ),
-                            _MiniStat(
-                              label: l10n.patientsMale,
-                              value: t.patientsMale.toString(),
-                            ),
-                            _MiniStat(
-                              label: l10n.patientsFemale,
-                              value: t.patientsFemale.toString(),
-                            ),
-                            _MiniStat(
-                              label: l10n.patientsChild,
-                              value: t.patientsChild.toString(),
-                            ),
-                            _MiniStat(
-                              label: l10n.currentlyTreating,
-                              value: t.activePatients.toString(),
-                            ),
-                            _MiniStat(
-                              label: l10n.finishedTreatment,
-                              value: t.completedPatients.toString(),
-                            ),
-                          ],
-                        ),
-                      ],
+                ...s.byTherapist.map(
+                  (t) => Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.therapistName,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _MiniStat(
+                                label: l10n.totalPatients,
+                                value: t.totalPatients.toString(),
+                              ),
+                              _MiniStat(
+                                label: l10n.patientsMale,
+                                value: t.patientsMale.toString(),
+                              ),
+                              _MiniStat(
+                                label: l10n.patientsFemale,
+                                value: t.patientsFemale.toString(),
+                              ),
+                              _MiniStat(
+                                label: l10n.patientsChild,
+                                value: t.patientsChild.toString(),
+                              ),
+                              _MiniStat(
+                                label: l10n.currentlyTreating,
+                                value: t.activePatients.toString(),
+                              ),
+                              _MiniStat(
+                                label: l10n.finishedTreatment,
+                                value: t.completedPatients.toString(),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           );
         },
@@ -364,7 +366,7 @@ StatsSummary _scopeSummary({
     patientsChild: mine.patientsChild,
     activePatients: mine.activePatients,
     completedPatients: mine.completedPatients,
-    byTherapist: [mine],
+    byTherapist: const [],
   );
 }
 
