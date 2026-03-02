@@ -57,18 +57,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       _TabItem(id: 'today', label: l10n.dashboardToday, icon: Icons.today, screen: const _DayView()),
       _TabItem(id: 'appointments', label: l10n.dashboardAppointments, icon: Icons.calendar_month, screen: const AppointmentsScreen()),
       _TabItem(id: 'patients', label: l10n.dashboardPatients, icon: Icons.people, screen: const PatientsScreen()),
+      _TabItem(id: 'therapists', label: l10n.dashboardTherapists, icon: Icons.medical_services, screen: const TherapistsScreen()),
+      _TabItem(id: 'stats', label: l10n.dashboardStats, icon: Icons.bar_chart, screen: const StatsScreen()),
+      _TabItem(id: 'settings', label: l10n.dashboardSettings, icon: Icons.settings, screen: const SettingsScreen()),
     ];
 
+    // Role-based restrictions are enforced inside each feature screen/repository.
+    // Tabs remain visible for both admin and therapist users.
     if (isAdmin) {
-      base.addAll([
-        _TabItem(id: 'therapists', label: l10n.dashboardTherapists, icon: Icons.medical_services, screen: const TherapistsScreen()),
-        _TabItem(id: 'stats', label: l10n.dashboardStats, icon: Icons.bar_chart, screen: const StatsScreen()),
-        _TabItem(id: 'settings', label: l10n.dashboardSettings, icon: Icons.settings, screen: const SettingsScreen()),
-      ]);
-    } else {
-      base.add(
-        _TabItem(id: 'settings', label: l10n.dashboardSettings, icon: Icons.settings, screen: const SettingsScreen()),
-      );
+      return base;
     }
 
     return base;
