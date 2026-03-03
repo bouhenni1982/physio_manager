@@ -586,6 +586,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ageLabel => 'Âge';
 
   @override
+  String get ageRequired => 'L’âge est obligatoire';
+
+  @override
   String get ageMustBeNumber => 'L’âge doit être un nombre';
 
   @override

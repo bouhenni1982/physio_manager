@@ -184,6 +184,7 @@
   "fullNameRequired": "Full name is required",
   "nameTooShort": "Name is too short",
   "ageLabel": "Age",
+  "ageRequired": "Age is required",
   "ageMustBeNumber": "Age must be a number",
   "ageInvalid": "Invalid age",
   "genderLabel": "Gender",

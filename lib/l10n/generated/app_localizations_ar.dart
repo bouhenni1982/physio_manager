@@ -579,6 +579,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ageLabel => 'العمر';
 
   @override
+  String get ageRequired => 'العمر إجباري';
+
+  @override
   String get ageMustBeNumber => 'العمر يجب أن يكون رقمًا';
 
   @override

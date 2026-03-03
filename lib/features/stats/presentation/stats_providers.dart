@@ -183,7 +183,7 @@ class _StatsService {
       perTherapist.putIfAbsent(id, _TherapistCounters.new);
     }
 
-    final genderByPatientId = <String, String>{};
+    final categoryByPatientId = <String, String>{};
     var malePatients = 0;
     var femalePatients = 0;
     var childPatients = 0;
@@ -197,22 +197,24 @@ class _StatsService {
       final patientId = (p['id'] ?? '').toString();
       final therapistId = (p['therapist_id'] ?? '').toString();
       final gender = _normalizeGender((p['gender'] ?? '').toString());
+      final age = _parseAge(p['age']);
+      final category = _demographicCategory(gender: gender, age: age);
       final status = (p['status'] ?? '').toString().toLowerCase();
       totalPatients++;
 
-      if (patientId.isNotEmpty) genderByPatientId[patientId] = gender;
-      if (gender == 'male') malePatients++;
-      if (gender == 'female') femalePatients++;
-      if (gender == 'child') childPatients++;
+      if (patientId.isNotEmpty) categoryByPatientId[patientId] = category;
+      if (category == 'male') malePatients++;
+      if (category == 'female') femalePatients++;
+      if (category == 'child') childPatients++;
       if (status == 'active') activePatients++;
       if (status == 'completed') completedPatients++;
 
       if (therapistId.isNotEmpty && perTherapist.containsKey(therapistId)) {
         final c = perTherapist[therapistId]!;
         c.totalPatients++;
-        if (gender == 'male') c.patientsMale++;
-        if (gender == 'female') c.patientsFemale++;
-        if (gender == 'child') c.patientsChild++;
+        if (category == 'male') c.patientsMale++;
+        if (category == 'female') c.patientsFemale++;
+        if (category == 'child') c.patientsChild++;
         if (status == 'active') c.activePatients++;
         if (status == 'completed') c.completedPatients++;
       }
@@ -231,7 +233,7 @@ class _StatsService {
 
       final patientId = (a['patient_id'] ?? '').toString();
       final therapistId = (a['therapist_id'] ?? '').toString();
-      final g = genderByPatientId[patientId];
+      final g = categoryByPatientId[patientId];
       if (g == 'male') maleSessions++;
       if (g == 'female') femaleSessions++;
       if (g == 'child') childSessions++;
@@ -306,6 +308,20 @@ class _StatsService {
     if (g == 'male' || g == 'm' || g.contains('ذكر')) return 'male';
     if (g == 'female' || g == 'f' || g.contains('أنث')) return 'female';
     if (g == 'child' || g.contains('طفل')) return 'child';
+    return '';
+  }
+
+  int? _parseAge(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is int) return raw;
+    return int.tryParse(raw.toString());
+  }
+
+  String _demographicCategory({required String gender, required int? age}) {
+    if (age != null && age < 16) return 'child';
+    if (gender == 'male') return 'male';
+    if (gender == 'female') return 'female';
+    if (gender == 'child') return 'child'; // legacy rows
     return '';
   }
 

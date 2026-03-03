@@ -180,7 +180,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       repo: ref.read(autocompleteRepositoryProvider),
                       validator: (v) {
                         final value = (v ?? '').trim();
-                        if (value.isEmpty) return null;
+                        if (value.isEmpty) return l10n.ageRequired;
                         final age = int.tryParse(value);
                         if (age == null) return l10n.ageMustBeNumber;
                         if (age < 0 || age > 120) return l10n.ageInvalid;
@@ -193,7 +193,6 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       items: [
                         DropdownMenuItem(value: 'male', child: Text(l10n.filterMale)),
                         DropdownMenuItem(value: 'female', child: Text(l10n.filterFemale)),
-                        DropdownMenuItem(value: 'child', child: Text(l10n.filterChild)),
                       ],
                       onChanged: _isSaving
                           ? null

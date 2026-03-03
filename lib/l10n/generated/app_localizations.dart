@@ -1156,6 +1156,12 @@ abstract class AppLocalizations {
   /// **'العمر'**
   String get ageLabel;
 
+  /// No description provided for @ageRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'العمر إجباري'**
+  String get ageRequired;
+
   /// No description provided for @ageMustBeNumber.
   ///
   /// In ar, this message translates to:

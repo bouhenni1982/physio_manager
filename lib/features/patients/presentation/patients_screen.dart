@@ -53,7 +53,13 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
 
           final query = _search.text.trim().toLowerCase();
           final filtered = items.where((p) {
-            if (_genderFilter != 'all' && p.gender != _genderFilter) return false;
+            if (_genderFilter != 'all') {
+              if (_genderFilter == 'child') {
+                if (!_isChildAge(p.age)) return false;
+              } else if (_genderFilter == 'male' || _genderFilter == 'female') {
+                if (_isChildAge(p.age) || p.gender != _genderFilter) return false;
+              }
+            }
             if (_statusFilter == 'active' && p.status != 'active') return false;
             if (_statusFilter == 'completed' && p.status != 'completed') {
               return false;
@@ -460,4 +466,6 @@ class _GenderChip extends StatelessWidget {
     );
   }
 }
+
+bool _isChildAge(int? age) => age != null && age < 16;
 

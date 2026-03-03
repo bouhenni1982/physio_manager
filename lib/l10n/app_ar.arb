@@ -184,6 +184,7 @@
   "fullNameRequired": "الاسم الكامل مطلوب",
   "nameTooShort": "الاسم قصير جدًا",
   "ageLabel": "العمر",
+  "ageRequired": "العمر إجباري",
   "ageMustBeNumber": "العمر يجب أن يكون رقمًا",
   "ageInvalid": "العمر غير صالح",
   "genderLabel": "الجنس",
