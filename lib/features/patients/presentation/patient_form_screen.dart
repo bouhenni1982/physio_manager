@@ -356,6 +356,33 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
   Future<void> _save(bool isEdit) async {
     final l10n = AppLocalizations.of(context);
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    if (!isEdit && _createInitialAppointment) {
+      final therapistName = _resolveTherapistName();
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.confirm),
+          content: Text(
+            '${l10n.fullNameLabel}: ${_fullName.text.trim()}\n'
+            '${l10n.firstAppointmentDateTime}: ${_formatDateTime(context, _initialAppointmentAt)}\n'
+            '${l10n.therapistLabel}: $therapistName',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.confirm),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
     setState(() => _isSaving = true);
     try {
       if (!isEdit &&
@@ -456,6 +483,19 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         setState(() => _isSaving = false);
       }
     }
+  }
+
+  String _resolveTherapistName() {
+    if ((_therapistId ?? '').isEmpty) {
+      return AppLocalizations.of(context).noTherapistOption;
+    }
+    final therapists = ref.read(therapistsProvider).valueOrNull ?? const [];
+    for (final therapist in therapists) {
+      if (therapist.id == _therapistId) {
+        return therapist.fullName;
+      }
+    }
+    return AppLocalizations.of(context).noTherapistOption;
   }
 }
 
