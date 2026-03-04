@@ -287,6 +287,7 @@
   "timeLabel": "الوقت (HH:mm)",
   "statusLabel": "الحالة",
   "pickPatientTherapist": "اختر المريض والمختص أولاً",
+  "patientOneAppointmentPerDay": "لا يمكن منح نفس المريض أكثر من موعد في نفس اليوم إلا بعد إلغاء الموعد السابق",
   "appointmentUpdated": "تم تعديل الموعد",
   "appointmentCreated": "تم إنشاء موعد",
   "appointmentUpdatedWithReminder": "تم تعديل الموعد (تذكير: {minutes} دقيقة)",

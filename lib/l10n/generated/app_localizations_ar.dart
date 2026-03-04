@@ -904,6 +904,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pickPatientTherapist => 'اختر المريض والمختص أولاً';
 
   @override
+  String get patientOneAppointmentPerDay =>
+      'لا يمكن منح نفس المريض أكثر من موعد في نفس اليوم إلا بعد إلغاء الموعد السابق';
+
+  @override
   String get appointmentUpdated => 'تم تعديل الموعد';
 
   @override

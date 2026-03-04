@@ -911,6 +911,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pickPatientTherapist => 'Choisissez patient et kiné';
 
   @override
+  String get patientOneAppointmentPerDay =>
+      'Ce patient a déjà un rendez-vous ce jour-là. Annulez d’abord le rendez-vous existant.';
+
+  @override
   String get appointmentUpdated => 'Rendez-vous modifié';
 
   @override

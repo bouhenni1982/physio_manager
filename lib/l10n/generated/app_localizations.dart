@@ -1761,6 +1761,12 @@ abstract class AppLocalizations {
   /// **'اختر المريض والمختص أولاً'**
   String get pickPatientTherapist;
 
+  /// No description provided for @patientOneAppointmentPerDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن منح نفس المريض أكثر من موعد في نفس اليوم إلا بعد إلغاء الموعد السابق'**
+  String get patientOneAppointmentPerDay;
+
   /// No description provided for @appointmentUpdated.
   ///
   /// In ar, this message translates to:

@@ -56,6 +56,7 @@ class SupabaseAppointmentRepository implements AppointmentRepository {
   @override
   Future<Appointment> create(Appointment appointment) async {
     await _db.init();
+    await _ensureNoDailyDuplicate(appointment);
     final isAdmin = await _isCurrentUserAdmin();
     final currentTherapistId = await _currentTherapistId();
     if (!isAdmin) {
@@ -91,6 +92,7 @@ class SupabaseAppointmentRepository implements AppointmentRepository {
   @override
   Future<void> update(Appointment appointment) async {
     await _db.init();
+    await _ensureNoDailyDuplicate(appointment, ignoreAppointmentId: appointment.id);
     final isAdmin = await _isCurrentUserAdmin();
     final currentTherapistId = await _currentTherapistId();
     if (!isAdmin) {
@@ -234,6 +236,65 @@ class SupabaseAppointmentRepository implements AppointmentRepository {
     }
     if ((row['therapist_id'] as String?) != therapistId) {
       throw Exception('forbidden_patient_scope');
+    }
+  }
+
+  Future<void> _ensureNoDailyDuplicate(
+    Appointment appointment, {
+    String? ignoreAppointmentId,
+  }) async {
+    if (appointment.status == 'canceled') return;
+    final start = DateTime(
+      appointment.scheduledAt.year,
+      appointment.scheduledAt.month,
+      appointment.scheduledAt.day,
+    );
+    final end = DateTime(
+      appointment.scheduledAt.year,
+      appointment.scheduledAt.month,
+      appointment.scheduledAt.day,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    final localRows = await _db.queryWhere(
+      'appointments',
+      where:
+          'patient_id = ? AND scheduled_at >= ? AND scheduled_at <= ? AND status != ?',
+      whereArgs: [
+        appointment.patientId,
+        start.millisecondsSinceEpoch,
+        end.millisecondsSinceEpoch,
+        'canceled',
+      ],
+    );
+    final localDuplicate = localRows.any(
+      (row) => (row['id'] as String?) != ignoreAppointmentId,
+    );
+    if (localDuplicate) {
+      throw Exception('duplicate_daily_appointment');
+    }
+
+    try {
+      var req = _client
+          .from('appointments')
+          .select('id')
+          .eq('patient_id', appointment.patientId)
+          .neq('status', 'canceled')
+          .gte('scheduled_at', start.toUtc().toIso8601String())
+          .lte('scheduled_at', end.toUtc().toIso8601String());
+      if (ignoreAppointmentId != null) {
+        req = req.neq('id', ignoreAppointmentId);
+      }
+      final rows = await req.limit(1);
+      if ((rows as List).isNotEmpty) {
+        throw Exception('duplicate_daily_appointment');
+      }
+    } catch (e) {
+      if (e.toString().contains('duplicate_daily_appointment')) rethrow;
+      // Network/offline or temporary remote errors: keep local validation result.
     }
   }
 }

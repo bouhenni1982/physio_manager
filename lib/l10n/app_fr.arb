@@ -287,6 +287,7 @@
   "timeLabel": "Heure (HH:mm)",
   "statusLabel": "Statut",
   "pickPatientTherapist": "Choisissez patient et kiné",
+  "patientOneAppointmentPerDay": "Ce patient a déjà un rendez-vous ce jour-là. Annulez d’abord le rendez-vous existant.",
   "appointmentUpdated": "Rendez-vous modifié",
   "appointmentCreated": "Rendez-vous créé",
   "appointmentUpdatedWithReminder": "Rendez-vous modifié (rappel : {minutes} min)",

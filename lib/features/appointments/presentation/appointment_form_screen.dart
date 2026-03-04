@@ -307,119 +307,44 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                           const SizedBox(height: 24),
                           FilledButton(
                             onPressed: () async {
-                              if (_patientId == null || _therapistId == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.pickPatientTherapist),
-                                  ),
-                                );
-                                return;
-                              }
-                              if (!isAdmin &&
-                                  myTherapistId != null &&
-                                  _therapistId != myTherapistId) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.pickPatientTherapist),
-                                  ),
-                                );
-                                return;
-                              }
-                              if (!_applyManualDateTime(context, l10n)) return;
-
-                              final repo = ref.read(
-                                appointmentRepositoryProvider,
-                              );
-                              final auto = ref.read(
-                                autocompleteRepositoryProvider,
-                              );
-                              final id =
-                                  widget.appointment?.id ?? const Uuid().v4();
-                              final appointment = Appointment(
-                                id: id,
-                                patientId: _patientId!,
-                                therapistId: _therapistId!,
-                                scheduledAt: _scheduledAt,
-                                status: _status,
-                              );
-                              if (isEdit) {
-                                await repo.update(appointment);
-                                final notifEnabled = ref.read(
-                                  notifEnabledProvider,
-                                );
-                                if (notifEnabled) {
-                                  final minutes = ref.read(
-                                    reminderMinutesProvider,
-                                  );
-                                  final msg = l10n
-                                      .appointmentUpdatedWithReminder(minutes);
-                                  await ref
-                                      .read(localNotificationsProvider)
-                                      .showNow(l10n.appointmentUpdated, msg);
-                                  await NotificationLogService().log(
-                                    l10n.appointmentUpdated,
-                                    msg,
-                                  );
-                                }
-                              } else {
-                                await repo.create(appointment);
-                                final notifEnabled = ref.read(
-                                  notifEnabledProvider,
-                                );
-                                if (notifEnabled) {
-                                  final minutes = ref.read(
-                                    reminderMinutesProvider,
-                                  );
-                                  await ref
-                                      .read(localNotificationsProvider)
-                                      .showNow(
-                                        l10n.appointmentCreated,
-                                        l10n.appointmentCreatedWithReminder(
-                                          minutes,
-                                        ),
-                                      );
-                                  await NotificationLogService().log(
-                                    l10n.appointmentCreated,
-                                    l10n.appointmentCreatedWithReminder(
-                                      minutes,
-                                    ),
-                                  );
-                                }
-                              }
-
-                              if (!isEdit &&
-                                  _createSeries &&
-                                  remainingSuggested > 0) {
-                                final extraDates = _buildSeriesDates(
-                                  base: _scheduledAt,
-                                  count: remainingSuggested,
-                                  mode: _repeatMode,
-                                  weekdays: _repeatWeekdays,
-                                  customDates: _customDatesController.text,
-                                );
-                                if (extraDates == null) {
-                                  if (!context.mounted) return;
+                              try {
+                                if (_patientId == null || _therapistId == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(l10n.invalidRepeatSelection),
+                                      content: Text(l10n.pickPatientTherapist),
                                     ),
                                   );
                                   return;
                                 }
-                                for (final dt in extraDates) {
-                                  final extraId = const Uuid().v4();
-                                  final extra = Appointment(
-                                    id: extraId,
-                                    patientId: _patientId!,
-                                    therapistId: _therapistId!,
-                                    scheduledAt: dt,
-                                    status: 'scheduled',
+                                if (!isAdmin &&
+                                    myTherapistId != null &&
+                                    _therapistId != myTherapistId) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(l10n.pickPatientTherapist),
+                                    ),
                                   );
-                                  await repo.create(extra);
-                                  final notifications = ref.read(
-                                    localNotificationsProvider,
-                                  );
-                                  await notifications.cancel(extraId);
+                                  return;
+                                }
+                                if (!_applyManualDateTime(context, l10n)) return;
+
+                                final repo = ref.read(
+                                  appointmentRepositoryProvider,
+                                );
+                                final auto = ref.read(
+                                  autocompleteRepositoryProvider,
+                                );
+                                final id =
+                                    widget.appointment?.id ?? const Uuid().v4();
+                                final appointment = Appointment(
+                                  id: id,
+                                  patientId: _patientId!,
+                                  therapistId: _therapistId!,
+                                  scheduledAt: _scheduledAt,
+                                  status: _status,
+                                );
+                                if (isEdit) {
+                                  await repo.update(appointment);
                                   final notifEnabled = ref.read(
                                     notifEnabledProvider,
                                   );
@@ -427,61 +352,149 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                                     final minutes = ref.read(
                                       reminderMinutesProvider,
                                     );
-                                    final remindAt = dt.subtract(
-                                      Duration(minutes: minutes),
+                                    final msg = l10n
+                                        .appointmentUpdatedWithReminder(minutes);
+                                    await ref
+                                        .read(localNotificationsProvider)
+                                        .showNow(l10n.appointmentUpdated, msg);
+                                    await NotificationLogService().log(
+                                      l10n.appointmentUpdated,
+                                      msg,
                                     );
-                                    await notifications.scheduleReminder(
-                                      extraId,
-                                      remindAt,
-                                      l10n.reminderTitle,
-                                      l10n.reminderBody(minutes),
+                                  }
+                                } else {
+                                  await repo.create(appointment);
+                                  final notifEnabled = ref.read(
+                                    notifEnabledProvider,
+                                  );
+                                  if (notifEnabled) {
+                                    final minutes = ref.read(
+                                      reminderMinutesProvider,
+                                    );
+                                    await ref
+                                        .read(localNotificationsProvider)
+                                        .showNow(
+                                          l10n.appointmentCreated,
+                                          l10n.appointmentCreatedWithReminder(
+                                            minutes,
+                                          ),
+                                        );
+                                    await NotificationLogService().log(
+                                      l10n.appointmentCreated,
+                                      l10n.appointmentCreatedWithReminder(
+                                        minutes,
+                                      ),
                                     );
                                   }
                                 }
-                              }
 
-                              final dateStr = _formatDate(_scheduledAt);
-                              final timeStr = _formatTime(_scheduledAt);
-                              await auto.record('date', dateStr);
-                              await auto.record('time', timeStr);
+                                if (!isEdit &&
+                                    _createSeries &&
+                                    remainingSuggested > 0) {
+                                  final extraDates = _buildSeriesDates(
+                                    base: _scheduledAt,
+                                    count: remainingSuggested,
+                                    mode: _repeatMode,
+                                    weekdays: _repeatWeekdays,
+                                    customDates: _customDatesController.text,
+                                  );
+                                  if (extraDates == null) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(l10n.invalidRepeatSelection),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  for (final dt in extraDates) {
+                                    final extraId = const Uuid().v4();
+                                    final extra = Appointment(
+                                      id: extraId,
+                                      patientId: _patientId!,
+                                      therapistId: _therapistId!,
+                                      scheduledAt: dt,
+                                      status: 'scheduled',
+                                    );
+                                    await repo.create(extra);
+                                    final notifications = ref.read(
+                                      localNotificationsProvider,
+                                    );
+                                    await notifications.cancel(extraId);
+                                    final notifEnabled = ref.read(
+                                      notifEnabledProvider,
+                                    );
+                                    if (notifEnabled) {
+                                      final minutes = ref.read(
+                                        reminderMinutesProvider,
+                                      );
+                                      final remindAt = dt.subtract(
+                                        Duration(minutes: minutes),
+                                      );
+                                      await notifications.scheduleReminder(
+                                        extraId,
+                                        remindAt,
+                                        l10n.reminderTitle,
+                                        l10n.reminderBody(minutes),
+                                      );
+                                    }
+                                  }
+                                }
 
-                              final dayKey = DateTime(
-                                _scheduledAt.year,
-                                _scheduledAt.month,
-                                _scheduledAt.day,
-                              );
-                              ref.invalidate(
-                                appointmentsForDayProvider(dayKey),
-                              );
-                              ref
-                                      .read(
-                                        selectedAppointmentsDayProvider
-                                            .notifier,
-                                      )
-                                      .state =
-                                  dayKey;
-                              final notifications = ref.read(
-                                localNotificationsProvider,
-                              );
-                              await notifications.cancel(appointment.id);
-                              final notifEnabled = ref.read(
-                                notifEnabledProvider,
-                              );
-                              if (notifEnabled) {
-                                final minutes = ref.read(
-                                  reminderMinutesProvider,
+                                final dateStr = _formatDate(_scheduledAt);
+                                final timeStr = _formatTime(_scheduledAt);
+                                await auto.record('date', dateStr);
+                                await auto.record('time', timeStr);
+
+                                final dayKey = DateTime(
+                                  _scheduledAt.year,
+                                  _scheduledAt.month,
+                                  _scheduledAt.day,
                                 );
-                                final remindAt = _scheduledAt.subtract(
-                                  Duration(minutes: minutes),
+                                ref.invalidate(
+                                  appointmentsForDayProvider(dayKey),
                                 );
-                                await notifications.scheduleReminder(
-                                  appointment.id,
-                                  remindAt,
-                                  l10n.reminderTitle,
-                                  l10n.reminderBody(minutes),
+                                ref
+                                        .read(
+                                          selectedAppointmentsDayProvider
+                                              .notifier,
+                                        )
+                                        .state =
+                                    dayKey;
+                                final notifications = ref.read(
+                                  localNotificationsProvider,
                                 );
+                                await notifications.cancel(appointment.id);
+                                final notifEnabled = ref.read(
+                                  notifEnabledProvider,
+                                );
+                                if (notifEnabled) {
+                                  final minutes = ref.read(
+                                    reminderMinutesProvider,
+                                  );
+                                  final remindAt = _scheduledAt.subtract(
+                                    Duration(minutes: minutes),
+                                  );
+                                  await notifications.scheduleReminder(
+                                    appointment.id,
+                                    remindAt,
+                                    l10n.reminderTitle,
+                                    l10n.reminderBody(minutes),
+                                  );
+                                }
+                                if (context.mounted) Navigator.pop(context);
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                final raw = e.toString();
+                                final msg = raw.contains(
+                                  'duplicate_daily_appointment',
+                                )
+                                    ? l10n.patientOneAppointmentPerDay
+                                    : raw;
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(SnackBar(content: Text(msg)));
                               }
-                              if (context.mounted) Navigator.pop(context);
                             },
                             child: Text(isEdit ? l10n.update : l10n.save),
                           ),

@@ -906,6 +906,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickPatientTherapist => 'Select patient and therapist first';
 
   @override
+  String get patientOneAppointmentPerDay =>
+      'This patient already has an appointment on this day. Cancel the existing appointment first.';
+
+  @override
   String get appointmentUpdated => 'Appointment updated';
 
   @override

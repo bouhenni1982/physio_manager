@@ -287,6 +287,7 @@
   "timeLabel": "Time (HH:mm)",
   "statusLabel": "Status",
   "pickPatientTherapist": "Select patient and therapist first",
+  "patientOneAppointmentPerDay": "This patient already has an appointment on this day. Cancel the existing appointment first.",
   "appointmentUpdated": "Appointment updated",
   "appointmentCreated": "Appointment created",
   "appointmentUpdatedWithReminder": "Appointment updated (reminder: {minutes} min)",
